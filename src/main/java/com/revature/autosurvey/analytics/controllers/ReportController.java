@@ -19,7 +19,8 @@ public class ReportController {
 	private ReportService reportService;
 	
 	@GetMapping
-	public Flux<Report> getReport(String surveyId) {
-		return reportService.getReport(surveyId);
+	public Report getReport(String surveyId) {
+		//return reportService.getReport(surveyId);
+		return new Report(surveyId);
 	}
 }
