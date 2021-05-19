@@ -24,12 +24,33 @@ Feature: Reports
     Given path 'reports'
     And params {surveyId:'#(surveyId)'}
     When method GET
-    Then status 200
+    Then status <status>
     And match $ == <expected>
     
     Examples:
-    |surveyId|expected      |
-    |1       |{surveyId:"1"} |
-    |null    |{surveyId:null}|
+    |surveyId|status|expected         |
+    |1       |200   |{surveyId:"1", weekEnum:'#null'}   |
 
+  Scenario Outline: surveyId:<surveyId>
+    Given path 'reports'
+    And params {surveyId:'#(surveyId)'}
+    When method GET
+    Then status <status>
+    
+    Examples:
+    |surveyId|status|
+    |1       |200   |
+    |        |400   |
+ 
+
+  Scenario Outline: surveyId:<surveyId> weekEnum:<weekEnum>
+    Given path 'reports'
+    And params {surveyId:'#(surveyId)', weekEnum:'#(weekEnum)'}
+    When method GET
+    Then status <status>
+    And match $ == <expected>
+    
+    Examples:
+    |surveyId|weekEnum|status|expected                         |
+    |1       |1       |200   |{surveyId:"1", weekEnum:"1"}     |
  
