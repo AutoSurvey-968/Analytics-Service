@@ -5,8 +5,10 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.revature.autosurvey.analytics.beans.Report;
+
 import net.minidev.json.JSONObject;
-import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Component
 public class SurveyDaoImpl implements SurveyDao {
@@ -18,10 +20,10 @@ public class SurveyDaoImpl implements SurveyDao {
 	private Environment env;
 
 	@Override
-	public Flux<JSONObject> getSurvey(String surveyId) {
+	public Mono<Report> getSurvey(String surveyId) {
 		WebClient wc = webClient.baseUrl(env.getProperty("GATEWAY_URL")).build();
-		Flux<JSONObject> job = wc.get().uri("/survey").retrieve().bodyToFlux(JSONObject.class);
-		return job;
+		Mono<JSONObject> job = wc.get().uri("/survey").retrieve().bodyToMono(JSONObject.class); // Change to report later?
+		return job.map(data -> new Report(data.toString()));
 	}
 
 }
