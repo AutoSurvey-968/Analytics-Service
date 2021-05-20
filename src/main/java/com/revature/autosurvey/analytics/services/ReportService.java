@@ -1,12 +1,13 @@
 package com.revature.autosurvey.analytics.services;
 
-import net.minidev.json.JSONObject;
-import reactor.core.publisher.Flux;
+import com.revature.autosurvey.analytics.beans.Report;
+
+import reactor.core.publisher.Mono;
 
 public interface ReportService {
 
-	Flux<JSONObject> getReport(String surveyId);
+	Mono<Report> getReport(String surveyId);
 
-	Flux<JSONObject> getReport(String surveyId, String weekEnum);
+	Mono<Report> getReport(String surveyId, String weekEnum);
 
 }

@@ -1,10 +1,11 @@
 package com.revature.autosurvey.analytics.data;
 
-import net.minidev.json.JSONObject;
-import reactor.core.publisher.Flux;
+import com.revature.autosurvey.analytics.beans.Report;
+
+import reactor.core.publisher.Mono;
 
 public interface ResponseDao {
 
-	Flux<JSONObject> getResponses(String surveyId);
+	Mono<Report> getResponses(String surveyId);
 
 }
