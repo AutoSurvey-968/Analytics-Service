@@ -25,10 +25,11 @@ Feature: Reports
     And params {surveyId:'#(surveyId)'}
     When method GET
     Then status <status>
-    And match $ == <expected>
+    And match $.surveyId == "2"
+    And match $.weekEnum == '#null'
     
     Examples:
-    |surveyId|status|expected         |
+    |surveyId|status|expected                           |
     |1       |200   |{surveyId:"1", weekEnum:'#null'}   |
 
   Scenario Outline: surveyId:<surveyId>
