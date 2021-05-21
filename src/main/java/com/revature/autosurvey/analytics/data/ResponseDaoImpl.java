@@ -1,7 +1,5 @@
 package com.revature.autosurvey.analytics.data;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -11,15 +9,10 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.revature.autosurvey.analytics.beans.Question;
-import com.revature.autosurvey.analytics.beans.Report;
 import com.revature.autosurvey.analytics.beans.Response;
 import com.revature.autosurvey.analytics.beans.Response.WeekNum;
-import com.revature.autosurvey.analytics.beans.Survey;
 
-import net.minidev.json.JSONObject;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @Component
 public class ResponseDaoImpl implements ResponseDao {
@@ -40,7 +33,7 @@ public class ResponseDaoImpl implements ResponseDao {
 //				.bodyToFlux(Response.class);
 //		return response;
 		Map<String, String> surveyResponse1 = new HashMap<>();
-		surveyResponse1.put("test", "5");
+		surveyResponse1.put("test", "1");
 		Response testResponse1 = new Response(
 				UUID.randomUUID(),
 				"test batchname", 

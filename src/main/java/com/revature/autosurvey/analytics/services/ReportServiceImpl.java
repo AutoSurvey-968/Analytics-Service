@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.revature.autosurvey.analytics.beans.Question.QuestionType;
 import com.revature.autosurvey.analytics.beans.Report;
 import com.revature.autosurvey.analytics.beans.Response;
 import com.revature.autosurvey.analytics.beans.Survey;
@@ -30,22 +31,50 @@ public class ReportServiceImpl implements ReportService {
 		Flux<Response> responses = responseDao.getResponses(surveyId);
 		/*
 		 * flatMap contents of survey to be used with a map of the contents of responses.
-		 * The map of the contents of responses will return a Report object that's been constructed with populated fields to the flatMap,
-		 * flatMap will return a Mono of Report.
+		 * The map of the list of responses' content will return a Mono of Report that's been constructed with populated fields to the flatMap,
+		 * flatMap will return the Mono of the previous map.
 		 */
 		return survey.flatMap(s -> responses.collectList().map(r -> {
 			// Eventually will pull the right survey/response by the correct surveyId. For now just grabbing all the test survey/responses.
 				Report report = new Report(s.getUuid().toString()); // Testing to see if we get the UUID from Survey, will probably change type of Report.getSurveyId to UUID later
-				Double average = 0.0;
 				//for each response, check questiontype
-				//if processable make an average and add to report
-				for(int i = 0; i < r.size(); i++) {
-					average += Double.valueOf(r.get(i).getSurveyResponses().get("test"));
-				}
-				average /= r.size();
-				Map<String, Double> averageMap = new HashMap<>(); // Create a new HashMap to populate it before adding it to report.
-				averageMap.put("test", average);
-				report.setAverages(averageMap);
+				report.setAverages(new HashMap<>());
+				report.setPercentages(new HashMap<>());
+				s.getQuestions().forEach(question -> {
+					if(question.getQuestionType() == QuestionType.SHORT_ANSWER) {
+						Double average = 0.0;
+
+						//if processable make an average and add to report
+						for(int i = 0; i < r.size(); i++) {
+							average += Double.valueOf(r.get(i).getSurveyResponses().get(question.getTitle()));
+						}
+						average /= r.size();
+						report.getAverages().put(question.getTitle(), average);
+					}
+					else if(question.getQuestionType() == QuestionType.MULTIPLE_CHOICE) {
+						Map<String, Double> choicesMap = new HashMap<>();
+						int total = 0;
+						question.getChoices().forEach(choice -> {
+							choicesMap.put(choice, 0.0);
+							
+						});
+						for(int i = 0; i < r.size(); i++) {
+							String questionTitle = r.get(i).getSurveyResponses().get(question.getTitle());
+							if(choicesMap.keySet().contains(questionTitle)) {
+								double value = choicesMap.get(questionTitle);
+								choicesMap.put(questionTitle, ++value);
+								total++;
+							}
+							
+						}
+				        for (String choice : choicesMap.keySet()) {
+							double result = choicesMap.get(choice);
+							choicesMap.put(choice, result/total);
+				        }
+						report.getPercentages().put(question.getTitle(), choicesMap);
+					}
+				});
+
 				return report;
 			})
 		);
