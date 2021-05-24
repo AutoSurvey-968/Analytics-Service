@@ -29,6 +29,20 @@ public class ReportServiceImpl implements ReportService {
 	public Mono<Report> getReport(String surveyId) {
 		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
 		Flux<Response> responses = responseDao.getResponses(surveyId);
+		return createReport(survey,responses);
+	}
+	
+	@Override
+	public Mono<Report> getReport(String surveyId, String weekEnum) {
+		
+		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
+		Flux<Response> responses = responseDao.getResponses(surveyId, weekEnum);
+		return createReport(survey,responses);
+	}
+
+	@Override
+	public Mono<Report> createReport(Mono<Survey> survey, Flux<Response> responses) {
+
 		/*
 		 * flatMap contents of survey to be used with a map of the contents of responses.
 		 * The map of the list of responses' content will return a Mono of Report that's been constructed with populated fields to the flatMap,
@@ -41,10 +55,12 @@ public class ReportServiceImpl implements ReportService {
 				report.setAverages(new HashMap<>());
 				report.setPercentages(new HashMap<>());
 				s.getQuestions().forEach(question -> {
+					
+					//currently using short answer because number doesn't exist
 					if(question.getQuestionType() == QuestionType.SHORT_ANSWER) {
 						Double average = 0.0;
 
-						//if processable make an average and add to report
+						//if processible make an average and add to report
 						for(int i = 0; i < r.size(); i++) {
 							average += Double.valueOf(r.get(i).getSurveyResponses().get(question.getTitle()));
 						}
@@ -57,7 +73,7 @@ public class ReportServiceImpl implements ReportService {
 						question.getChoices().forEach(choice -> {
 							choicesMap.put(choice, 0.0);
 							
-						});
+						});//adding up choices
 						for(int i = 0; i < r.size(); i++) {
 							String questionTitle = r.get(i).getSurveyResponses().get(question.getTitle());
 							if(choicesMap.keySet().contains(questionTitle)) {
@@ -66,7 +82,7 @@ public class ReportServiceImpl implements ReportService {
 								total++;
 							}
 							
-						}
+						}//creating percentages
 				        for (String choice : choicesMap.keySet()) {
 							double result = choicesMap.get(choice);
 							choicesMap.put(choice, result/total);
@@ -78,12 +94,6 @@ public class ReportServiceImpl implements ReportService {
 				return report;
 			})
 		);
-	}
-	
-	@Override
-	public Mono<Report> getReport(String surveyId, String weekEnum) {
-		
-		return getReport(surveyId);
 	}
 	
 }

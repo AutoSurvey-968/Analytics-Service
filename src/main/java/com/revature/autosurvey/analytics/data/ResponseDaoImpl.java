@@ -55,4 +55,15 @@ public class ResponseDaoImpl implements ResponseDao {
 
 	}
 
+	@Override
+	public Flux<Response> getResponses(String surveyId, String weekEnum) {
+		WebClient wc = webClient.baseUrl(env.getProperty("GATEWAY_URL")).build();
+		Flux<Response> response = wc.get()
+				.uri(uriBuilder -> uriBuilder.path("/responses/{surveyId}/{weekEnum}")
+				.build(surveyId))
+				.retrieve()
+				.bodyToFlux(Response.class);
+		return response;
+	}
+
 }

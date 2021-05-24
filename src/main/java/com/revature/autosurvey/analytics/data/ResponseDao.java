@@ -8,4 +8,6 @@ public interface ResponseDao {
 
 	Flux<Response> getResponses(String surveyId);
 
+	Flux<Response> getResponses(String surveyId, String weekEnum);
+
 }
