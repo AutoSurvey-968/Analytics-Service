@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 
 
 @RestController
-@RequestMapping(value = "/reports")
+@RequestMapping()
 public class ReportController {
 
 	@Autowired
