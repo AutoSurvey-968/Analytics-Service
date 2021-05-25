@@ -33,7 +33,7 @@ import reactor.core.publisher.Mono;
 
 @ExtendWith(SpringExtension.class)
 
-public class ReportServiceImplTest {
+class ReportServiceImplTest {
 
 	@TestConfiguration
 	static class Configuration {

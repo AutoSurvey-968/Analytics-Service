@@ -12,7 +12,5 @@ public interface ReportService {
 	Mono<Report> getReport(String surveyId);
 
 	Mono<Report> getReport(String surveyId, String weekEnum);
-	
-	Mono<Report> createReport(Mono<Survey> survey, Flux<Response> responses);
 
 }
