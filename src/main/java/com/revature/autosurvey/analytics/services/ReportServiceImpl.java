@@ -21,9 +21,17 @@ public class ReportServiceImpl implements ReportService {
 	
 	@Autowired
 	private ResponseDao responseDao;
+	@Autowired
+	public void setResponseDao(ResponseDao responseDao) {
+		this.responseDao=responseDao;
+	}
 	
 	@Autowired
 	private SurveyDao surveyDao;
+	@Autowired
+	public void setSurveyDao(SurveyDao surveyDao) {
+		this.surveyDao=surveyDao;
+	}
 
 	@Override
 	public Mono<Report> getReport(String surveyId) {
@@ -59,12 +67,18 @@ public class ReportServiceImpl implements ReportService {
 					//currently using short answer because number doesn't exist
 					if(question.getQuestionType() == QuestionType.SHORT_ANSWER) {
 						Double average = 0.0;
+						int size= r.size();
 
 						//if processible make an average and add to report
 						for(int i = 0; i < r.size(); i++) {
-							average += Double.valueOf(r.get(i).getSurveyResponses().get(question.getTitle()));
+							if(r.get(i).getSurveyResponses().get(question.getTitle())!=null&&r.get(i).getSurveyResponses().get(question.getTitle())!=""){
+								average += Double.valueOf(r.get(i).getSurveyResponses().get(question.getTitle()));
+
+							}else {
+								size--;
+							}
 						}
-						average /= r.size();
+						average /= size;
 						report.getAverages().put(question.getTitle(), average);
 					}
 					else if(question.getQuestionType() == QuestionType.MULTIPLE_CHOICE) {
