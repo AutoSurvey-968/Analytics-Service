@@ -5,13 +5,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.revature.autosurvey.analytics.beans.Report;
 import com.revature.autosurvey.analytics.beans.Response;
-import com.revature.autosurvey.analytics.beans.Survey;
 
-import net.minidev.json.JSONObject;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @Component
 public class ResponseDaoImpl implements ResponseDao {
@@ -25,12 +21,23 @@ public class ResponseDaoImpl implements ResponseDao {
 	@Override
 	public Flux<Response> getResponses(String surveyId) {
 		WebClient wc = webClient.baseUrl(env.getProperty("GATEWAY_URL")).build();
-		Flux<Response> job = wc.get()
+		Flux<Response> response = wc.get()
 				.uri(uriBuilder -> uriBuilder.path("/responses/{surveyId}")
 				.build(surveyId))
 				.retrieve()
 				.bodyToFlux(Response.class);
-		return job;
+		return response;
+	}
+
+	@Override
+	public Flux<Response> getResponses(String surveyId, String weekEnum) {
+		WebClient wc = webClient.baseUrl(env.getProperty("GATEWAY_URL")).build();
+		Flux<Response> response = wc.get()
+				.uri(uriBuilder -> uriBuilder.path("/responses/{surveyId}/{weekEnum}")
+				.build(surveyId))
+				.retrieve()
+				.bodyToFlux(Response.class);
+		return response;
 	}
 
 }

@@ -19,6 +19,16 @@ public class Response {
 	}
 	
 
+	public Response(UUID responseId, String batchName, WeekNum week, UUID surveyId,
+			Map<String, String> surveyResponses) {
+		super();
+		this.responseId = responseId;
+		this.batchName = batchName;
+		this.week = week;
+		this.surveyId = surveyId;
+		this.surveyResponses = surveyResponses;
+	}
+
 	public UUID getResponseId() {
 		return responseId;
 	}
