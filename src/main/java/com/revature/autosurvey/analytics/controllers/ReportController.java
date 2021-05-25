@@ -13,7 +13,6 @@ import reactor.core.publisher.Mono;
 
 
 @RestController
-@RequestMapping()
 public class ReportController {
 
 	@Autowired
