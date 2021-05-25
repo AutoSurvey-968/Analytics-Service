@@ -114,7 +114,9 @@ public class ReportServiceImpl implements ReportService {
 		}//creating percentages
         for (Map.Entry<String, Double> choiceEntry : choicesMap.entrySet()) {
 			double result = choiceEntry.getValue();
-			choicesMap.put(choiceEntry.getKey(), result/total);
+			if(total!=0) {
+				choicesMap.put(choiceEntry.getKey(), result/total);
+			}
         }
         return choicesMap;
 	}
