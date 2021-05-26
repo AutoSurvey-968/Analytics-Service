@@ -19,9 +19,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.revature.autosurvey.analytics.beans.Data;
 import com.revature.autosurvey.analytics.beans.Question;
 import com.revature.autosurvey.analytics.beans.Response;
-import com.revature.autosurvey.analytics.beans.Response.WeekNum;
+import com.revature.autosurvey.analytics.beans.Response.WeekEnum;
 import com.revature.autosurvey.analytics.beans.Survey;
 import com.revature.autosurvey.analytics.beans.Question.QuestionType;
 import com.revature.autosurvey.analytics.data.ResponseDao;
@@ -65,7 +66,7 @@ class ReportServiceImplTest {
 		Response testResponse1 = new Response(
 				UUID.randomUUID(),
 				"test batchname", 
-				WeekNum.A, 
+				WeekEnum.A, 
 				UUID.randomUUID(), 
 				surveyResponse1);
 		
@@ -75,7 +76,7 @@ class ReportServiceImplTest {
 		Response testResponse2 = new Response(
 				UUID.randomUUID(), 
 				"test batchname", 
-				WeekNum.A, 
+				WeekEnum.A, 
 				UUID.randomUUID(), 
 				surveyResponse2);
 		
@@ -85,7 +86,7 @@ class ReportServiceImplTest {
 		Response testResponse3 = new Response(
 				UUID.randomUUID(), 
 				"test batchname", 
-				WeekNum.A, 
+				WeekEnum.A, 
 				UUID.randomUUID(), 
 				surveyResponse3);
 		
@@ -95,7 +96,7 @@ class ReportServiceImplTest {
 		Response testResponse4 = new Response(
 				UUID.randomUUID(), 
 				"test batchname", 
-				WeekNum.A, 
+				WeekEnum.A, 
 				UUID.randomUUID(), 
 				surveyResponse4);
 		
@@ -105,7 +106,7 @@ class ReportServiceImplTest {
 		Response testResponse5 = new Response(
 				UUID.randomUUID(), 
 				"test batchname", 
-				WeekNum.A, 
+				WeekEnum.A, 
 				UUID.randomUUID(), 
 				surveyResponse5);
 		
@@ -151,17 +152,23 @@ class ReportServiceImplTest {
 	
 	@Test
 	void basicFunctionality() {
-		Mockito.when(responseDao.getResponses("1","A")).thenReturn(responses);
+		Mockito.when(responseDao.getResponses("1",WeekEnum.valueOf("A"))).thenReturn(responses);
 		Mockito.when(surveyDao.getSurvey("1")).thenReturn(survey);
-		Map<String,Double> mctest= new HashMap<>();
-		Map<String,Map<String,Double>> percentages= new HashMap<>();
-		Map<String, Double> averages=new HashMap<>();
-		mctest.put("1", 0.25);
-		mctest.put("2", 0.75);
+		Map<String,Data> mctest= new HashMap<>();
+		Map<String,Map<String,Data>> percentages= new HashMap<>();
+		Map<String, Data> averages=new HashMap<>();
+		Data a = new Data();
+		a.setData(0.25);
+		Data b = new Data();
+		b.setData(0.75);
+		mctest.put("1", a);
+		mctest.put("2", b);
 		percentages.put("mctest", mctest);
-		averages.put("avgTest", 1.75);
-	 	assertEquals(percentages,repService.getReport("1", "A").block().getPercentages(), "We should get a 50/50 split");
-	 	assertEquals(averages, repService.getReport("1", "A").block().getAverages(),"We should get the average of 1 and 2");
+		Data c = new Data();
+		c.setData(1.75);
+		averages.put("avgTest", c);
+	 	assertEquals(percentages,repService.getReport("1", WeekEnum.valueOf("A")).block().getPercentages(), "We should get a 50/50 split");
+	 	assertEquals(averages, repService.getReport("1", WeekEnum.valueOf("A")).block().getAverages(),"We should get the average of 1 and 2");
 	}
 	
 	

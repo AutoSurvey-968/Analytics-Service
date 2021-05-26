@@ -1,16 +1,21 @@
 package com.revature.autosurvey.analytics.services;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.revature.autosurvey.analytics.beans.Data;
 import com.revature.autosurvey.analytics.beans.Question;
 import com.revature.autosurvey.analytics.beans.Question.QuestionType;
 import com.revature.autosurvey.analytics.beans.Report;
 import com.revature.autosurvey.analytics.beans.Response;
+import com.revature.autosurvey.analytics.beans.Response.WeekEnum;
 import com.revature.autosurvey.analytics.beans.Survey;
 import com.revature.autosurvey.analytics.data.ResponseDao;
 import com.revature.autosurvey.analytics.data.SurveyDao;
@@ -37,17 +42,47 @@ public class ReportServiceImpl implements ReportService {
 
 	@Override
 	public Mono<Report> getReport(String surveyId) {
-		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
+		Mono<Survey> survey = Mono.just(new Survey(new UUID(0, 0),
+				LocalDateTime.MAX,
+				"survey",
+				"yeet",
+				"cibfur",
+				"2",
+				new ArrayList<String>(),
+				new ArrayList<Question>()
+				));
 		Flux<Response> responses = responseDao.getResponses(surveyId);
 		return createReport(survey,responses);
 	}
 	
 	@Override
-	public Mono<Report> getReport(String surveyId, String weekEnum) {
+	public Mono<Report> getReport(String surveyId, WeekEnum weekEnum) {
 		
 		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
 		Flux<Response> responses = responseDao.getResponses(surveyId, weekEnum);
-		return createReport(survey,responses);
+		if(weekEnum!=WeekEnum.A) {
+
+			Flux<Response> oldResponses = responseDao.getResponses(surveyId, WeekEnum.values()[weekEnum.ordinal()-1]);
+			Mono<Report> oldReport = createReport(survey, oldResponses);
+			Mono<Report> newReport = createReport(survey, responses);
+			return addDeltaToReport(oldReport, newReport);
+		} else {
+			return createReport(survey,responses);
+		}
+	}
+
+	private Mono<Report> addDeltaToReport(Mono<Report> oldReport, Mono<Report> newReport) {
+		return newReport.flatMap((report) -> {
+			return oldReport.map((old) -> {
+				Map<String, Data> averages = report.getAverages();
+				for(String s : averages.keySet()) {
+					Data d = averages.get(s);
+					Data o = old.getAverages().get(s);
+					d.setDelta(d.getData()-o.getData());
+				}
+				return report;
+			});
+		});
 	}
 
 	private Mono<Report> createReport(Mono<Survey> survey, Flux<Response> responses) {
@@ -65,11 +100,11 @@ public class ReportServiceImpl implements ReportService {
 					
 					//currently using short answer because number doesn't exist
 					if(question.getQuestionType() == QuestionType.SHORT_ANSWER) {
-						
-						report.getAverages().put(question.getTitle(), average(question,r));
+						Data d = new Data();
+						d.setData(average(question,r));
+						report.getAverages().put(question.getTitle(), d);
 					}
 					else if(question.getQuestionType() == QuestionType.MULTIPLE_CHOICE) {
-						
 						report.getPercentages().put(question.getTitle(), percentages(question, r));
 					}
 				});
@@ -96,26 +131,34 @@ public class ReportServiceImpl implements ReportService {
 		return average;
 	}
 
-	private Map<String, Double> percentages(Question question, List<Response> r){
-		Map<String, Double> choicesMap = new HashMap<>();
+	private Map<String, Data> percentages(Question question, List<Response> r){
+		Map<String, Data> choicesMap = new HashMap<>();
 		int total = 0;
-		question.getChoices().forEach(choice -> 
-			choicesMap.put(choice, 0.0)	
+		question.getChoices().forEach(choice -> {
+
+			Data d = new Data();
+			d.setData(0.0);
+			choicesMap.put(choice, d);
+		}
+
 		);
 		//adding up choices
 		for(int i = 0; i < r.size(); i++) {
 			String questionTitle = r.get(i).getSurveyResponses().get(question.getTitle());
 			if(choicesMap.keySet().contains(questionTitle)) {
-				double value = choicesMap.get(questionTitle);
-				choicesMap.put(questionTitle, ++value);
+				double value = choicesMap.get(questionTitle).getData();
+				Data d = new Data();
+				d.setData(++value);
+				choicesMap.put(questionTitle, d);
 				total++;
 			}
 			
 		}//creating percentages
-        for (Map.Entry<String, Double> choiceEntry : choicesMap.entrySet()) {
-			double result = choiceEntry.getValue();
+        for (Map.Entry<String, Data> choiceEntry : choicesMap.entrySet()) {
+			Data result = choiceEntry.getValue();
 			if(total!=0) {
-				choicesMap.put(choiceEntry.getKey(), result/total);
+				result.setData(result.getData()/total);
+				choicesMap.put(choiceEntry.getKey(), result);
 			}
         }
         return choicesMap;
