@@ -75,10 +75,19 @@ public class ReportServiceImpl implements ReportService {
 		return newReport.flatMap((report) -> {
 			return oldReport.map((old) -> {
 				Map<String, Data> averages = report.getAverages();
-				for(String s : averages.keySet()) {
-					Data d = averages.get(s);
-					Data o = old.getAverages().get(s);
-					d.setDelta(d.getData()-o.getData());
+				for(String question : averages.keySet()) {
+					Data newData = averages.get(question);
+					Data oldData = old.getAverages().get(question);
+					newData.setDelta(newData.getData()-oldData.getData());
+				}
+				Map<String, Map<String, Data>> percentages = report.getPercentages();
+				for(String question : percentages.keySet()) {
+					Map<String, Data> sub = percentages.get(question);
+					for(String option : sub.keySet()) {
+						Data newData = sub.get(option);
+						Data oldData = old.getPercentages().get(question).get(option);
+						newData.setDelta(newData.getData()-oldData.getData());
+					}
 				}
 				return report;
 			});

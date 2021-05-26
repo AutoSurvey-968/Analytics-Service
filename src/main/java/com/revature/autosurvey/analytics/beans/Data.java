@@ -41,4 +41,8 @@ public class Data {
 			return false;
 		return true;
 	}
+	@Override
+	public String toString() {
+		return "Data [data=" + data + ", delta=" + delta + "]";
+	}
 }
