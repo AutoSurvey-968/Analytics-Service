@@ -1,13 +1,13 @@
 package com.revature.autosurvey.analytics.beans;
 
 public class Data {
-	private double data;
+	private double datum;
 	private double delta;
-	public double getData() {
-		return data;
+	public double getDatum() {
+		return datum;
 	}
-	public void setData(double data) {
-		this.data = data;
+	public void setDatum(double datum) {
+		this.datum = datum;
 	}
 	public double getDelta() {
 		return delta;
@@ -20,7 +20,7 @@ public class Data {
 		final int prime = 31;
 		int result = 1;
 		long temp;
-		temp = Double.doubleToLongBits(data);
+		temp = Double.doubleToLongBits(datum);
 		result = prime * result + (int) (temp ^ (temp >>> 32));
 		temp = Double.doubleToLongBits(delta);
 		result = prime * result + (int) (temp ^ (temp >>> 32));
@@ -35,14 +35,12 @@ public class Data {
 		if (getClass() != obj.getClass())
 			return false;
 		Data other = (Data) obj;
-		if (Double.doubleToLongBits(data) != Double.doubleToLongBits(other.data))
+		if (Double.doubleToLongBits(datum) != Double.doubleToLongBits(other.datum))
 			return false;
-		if (Double.doubleToLongBits(delta) != Double.doubleToLongBits(other.delta))
-			return false;
-		return true;
+		return Double.doubleToLongBits(delta) == Double.doubleToLongBits(other.delta);
 	}
 	@Override
 	public String toString() {
-		return "Data [data=" + data + ", delta=" + delta + "]";
+		return "Data [data=" + datum + ", delta=" + delta + "]";
 	}
 }

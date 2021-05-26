@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,15 +43,7 @@ public class ReportServiceImpl implements ReportService {
 
 	@Override
 	public Mono<Report> getReport(String surveyId) {
-		Mono<Survey> survey = Mono.just(new Survey(new UUID(0, 0),
-				LocalDateTime.MAX,
-				"survey",
-				"yeet",
-				"cibfur",
-				"2",
-				new ArrayList<String>(),
-				new ArrayList<Question>()
-				));
+		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
 		Flux<Response> responses = responseDao.getResponses(surveyId);
 		return createReport(survey,responses);
 	}
@@ -72,26 +65,26 @@ public class ReportServiceImpl implements ReportService {
 	}
 
 	private Mono<Report> addDeltaToReport(Mono<Report> oldReport, Mono<Report> newReport) {
-		return newReport.flatMap((report) -> {
-			return oldReport.map((old) -> {
+		return newReport.flatMap(report -> 
+			oldReport.map(old -> {
 				Map<String, Data> averages = report.getAverages();
-				for(String question : averages.keySet()) {
-					Data newData = averages.get(question);
-					Data oldData = old.getAverages().get(question);
-					newData.setDelta(newData.getData()-oldData.getData());
+				for(Entry<String, Data> question : averages.entrySet()) {
+					Data newData = question.getValue();
+					Data oldData = old.getAverages().get(question.getKey());
+					newData.setDelta(newData.getDatum()-oldData.getDatum());
 				}
 				Map<String, Map<String, Data>> percentages = report.getPercentages();
-				for(String question : percentages.keySet()) {
-					Map<String, Data> sub = percentages.get(question);
-					for(String option : sub.keySet()) {
-						Data newData = sub.get(option);
-						Data oldData = old.getPercentages().get(question).get(option);
-						newData.setDelta(newData.getData()-oldData.getData());
+				for(Entry<String, Map<String, Data>> question : percentages.entrySet()) {
+					Map<String, Data> sub = question.getValue();
+					for(Entry<String, Data> option : sub.entrySet()) {
+						Data newData = option.getValue();
+						Data oldData = old.getPercentages().get(question.getKey()).get(option.getKey());
+						newData.setDelta(newData.getDatum()-oldData.getDatum());
 					}
 				}
 				return report;
-			});
-		});
+			})
+		);
 	}
 
 	private Mono<Report> createReport(Mono<Survey> survey, Flux<Response> responses) {
@@ -110,7 +103,7 @@ public class ReportServiceImpl implements ReportService {
 					//currently using short answer because number doesn't exist
 					if(question.getQuestionType() == QuestionType.SHORT_ANSWER) {
 						Data d = new Data();
-						d.setData(average(question,r));
+						d.setDatum(average(question,r));
 						report.getAverages().put(question.getTitle(), d);
 					}
 					else if(question.getQuestionType() == QuestionType.MULTIPLE_CHOICE) {
@@ -146,7 +139,7 @@ public class ReportServiceImpl implements ReportService {
 		question.getChoices().forEach(choice -> {
 
 			Data d = new Data();
-			d.setData(0.0);
+			d.setDatum(0.0);
 			choicesMap.put(choice, d);
 		}
 
@@ -155,9 +148,9 @@ public class ReportServiceImpl implements ReportService {
 		for(int i = 0; i < r.size(); i++) {
 			String questionTitle = r.get(i).getSurveyResponses().get(question.getTitle());
 			if(choicesMap.keySet().contains(questionTitle)) {
-				double value = choicesMap.get(questionTitle).getData();
+				double value = choicesMap.get(questionTitle).getDatum();
 				Data d = new Data();
-				d.setData(++value);
+				d.setDatum(++value);
 				choicesMap.put(questionTitle, d);
 				total++;
 			}
@@ -166,7 +159,7 @@ public class ReportServiceImpl implements ReportService {
         for (Map.Entry<String, Data> choiceEntry : choicesMap.entrySet()) {
 			Data result = choiceEntry.getValue();
 			if(total!=0) {
-				result.setData(result.getData()/total);
+				result.setDatum(result.getDatum()/total);
 				choicesMap.put(choiceEntry.getKey(), result);
 			}
         }

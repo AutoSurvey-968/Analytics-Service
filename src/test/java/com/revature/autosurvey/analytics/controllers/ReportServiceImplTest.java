@@ -217,14 +217,14 @@ class ReportServiceImplTest {
 		Map<String,Map<String,Data>> percentages= new HashMap<>();
 		Map<String, Data> averages=new HashMap<>();
 		Data oneData = new Data();
-		oneData.setData(0.25);
+		oneData.setDatum(0.25);
 		Data twoData = new Data();
-		twoData.setData(0.75);
+		twoData.setDatum(0.75);
 		mctest.put("1", oneData);
 		mctest.put("2", twoData);
 		percentages.put("mctest", mctest);
 		Data avgData = new Data();
-		avgData.setData(1.75);
+		avgData.setDatum(1.75);
 		averages.put("avgTest", avgData);
 	 	assertEquals(percentages,repService.getReport("1", WeekEnum.valueOf("A")).block().getPercentages(), "We should get a 25/75 split");
 	 	assertEquals(averages, repService.getReport("1", WeekEnum.valueOf("A")).block().getAverages(),"We should get the average of 1, 2, 2, and 2");
@@ -244,11 +244,11 @@ class ReportServiceImplTest {
 		Data twoData = new Data();
 		Data avgData = new Data();
 		
-	 	oneData.setData(1);
+	 	oneData.setDatum(1);
 	 	oneData.setDelta(0.75);
-	 	twoData.setData(0);
+	 	twoData.setDatum(0);
 	 	twoData.setDelta(-0.75);
-	 	avgData.setData(2.5);
+	 	avgData.setDatum(2.5);
 	 	avgData.setDelta(0.75);
 	 	
 
@@ -259,7 +259,7 @@ class ReportServiceImplTest {
 		averages.put("avgTest", avgData);
 	 	
 	 	Map<String, Data> results = repService.getReport("1", WeekEnum.valueOf("B")).block().getPercentages().get("mctest");
-	 	assertEquals(percentages.get("mctest").get("1").getData(),results.get("1").getData(), "We should get a '1' as the data");
+	 	assertEquals(percentages.get("mctest").get("1").getDatum(),results.get("1").getDatum(), "We should get a '1' as the data");
 	 	assertEquals(percentages.get("mctest").get("1").getDelta(),results.get("1").getDelta(), "We should get a delta of 0.75");
 	 	assertEquals(percentages.get("mctest").get("2"),results.get("2"), "We should get a '0' as the data with a delta of -0.75");
 	 	assertEquals(averages, repService.getReport("1", WeekEnum.valueOf("B")).block().getAverages(),"We should get the average of 2, 2, 2, and 4, with a delta of 0.75");

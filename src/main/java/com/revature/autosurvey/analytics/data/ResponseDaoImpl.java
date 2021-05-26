@@ -23,8 +23,8 @@ public class ResponseDaoImpl implements ResponseDao {
 	public Flux<Response> getResponses(String surveyId) {
 		WebClient wc = webClient.baseUrl(env.getProperty("GATEWAY_URL")).build();
 		Flux<Response> response = wc.get()
-				.uri((bui) -> 
-					bui.pathSegment("/responses").queryParam("surveyId", surveyId).build())
+				.uri(builder -> 
+					builder.pathSegment("/responses").queryParam("surveyId", surveyId).build())
 				.retrieve()
 				.bodyToFlux(Response.class);
 		return response;
@@ -34,8 +34,8 @@ public class ResponseDaoImpl implements ResponseDao {
 	public Flux<Response> getResponses(String surveyId, WeekEnum weekEnum) {
 		WebClient wc = webClient.baseUrl(env.getProperty("GATEWAY_URL")).build();
 		Flux<Response> response = wc.get()
-				.uri((bui) -> 
-					bui.pathSegment("/responses")
+				.uri(builder -> 
+					builder.pathSegment("/responses")
 					.queryParam("surveyId", surveyId)
 					.queryParam("weekEnum", weekEnum)
 					.build())
