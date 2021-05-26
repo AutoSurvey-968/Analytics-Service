@@ -27,6 +27,9 @@ public class Survey {
 		this.mappedQuestions = mappedQuestions;
 		this.questions = questions;
 	}
+	public Survey() {
+		super();
+	}
 	public UUID getUuid() {
 		return uuid;
 	}

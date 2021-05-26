@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.revature.autosurvey.analytics.beans.Report;
+import com.revature.autosurvey.analytics.beans.Response.WeekEnum;
 import com.revature.autosurvey.analytics.services.ReportService;
 
 import reactor.core.publisher.Mono;
@@ -23,7 +24,7 @@ public class ReportController {
 	}
 	
 	@GetMapping(params = {"surveyId", "weekEnum"})
-	public Mono<ResponseEntity<Report>> getReport(String surveyId, String weekEnum) {
+	public Mono<ResponseEntity<Report>> getReport(String surveyId, WeekEnum weekEnum) {
 		return reportService.getReport(surveyId, weekEnum).map(report -> ResponseEntity.status(200).body(report));
 	}
 }
