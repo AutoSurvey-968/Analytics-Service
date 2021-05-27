@@ -35,5 +35,6 @@ build/
 /.metadata/
 
 ### auth stuff ###
+*.conf
 *.json
 *.jks
