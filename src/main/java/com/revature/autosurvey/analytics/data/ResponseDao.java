@@ -11,4 +11,6 @@ public interface ResponseDao {
 
 	Flux<Response> getResponses(String surveyId, WeekEnum weekEnum);
 
+	Flux<Response> getResponses(String surveyId, WeekEnum weekEnum, String batchName);
+
 }

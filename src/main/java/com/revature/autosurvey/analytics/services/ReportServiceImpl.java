@@ -44,6 +44,24 @@ public class ReportServiceImpl implements ReportService {
 		return createReport(survey,responses);
 	}
 	
+
+
+	@Override
+	public Mono<Report> getReport(String surveyId, WeekEnum weekEnum, String batchName) {
+		
+		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
+		Flux<Response> responses = responseDao.getResponses(surveyId, weekEnum, batchName);
+		if(weekEnum!=WeekEnum.A) {
+
+			Flux<Response> oldResponses = responseDao.getResponses(surveyId, WeekEnum.values()[weekEnum.ordinal()-1], batchName);
+			Mono<Report> oldReport = createReport(survey, oldResponses);
+			Mono<Report> newReport = createReport(survey, responses);
+			return addDeltaToReport(oldReport, newReport);
+		} else {
+			return createReport(survey,responses);
+		}
+	}
+	
 	@Override
 	public Mono<Report> getReport(String surveyId, WeekEnum weekEnum) {
 		

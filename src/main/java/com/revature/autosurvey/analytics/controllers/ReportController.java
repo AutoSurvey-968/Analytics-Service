@@ -27,4 +27,9 @@ public class ReportController {
 	public Mono<ResponseEntity<Report>> getReport(String surveyId, WeekEnum weekEnum) {
 		return reportService.getReport(surveyId, weekEnum).map(report -> ResponseEntity.status(200).body(report));
 	}
+	
+	@GetMapping(params = {"surveyId", "weekEnum", "batchName"})
+	public Mono<ResponseEntity<Report>> getReport(String surveyId, WeekEnum weekEnum, String batchName) {
+		return reportService.getReport(surveyId, weekEnum, batchName).map(report -> ResponseEntity.status(200).body(report));
+	}
 }

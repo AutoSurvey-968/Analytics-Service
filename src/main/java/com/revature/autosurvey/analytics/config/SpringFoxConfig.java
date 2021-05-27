@@ -20,6 +20,7 @@ public class SpringFoxConfig {
                         .version("1.0.0")
                         .build())
                 .enable(true)
+                .enableUrlTemplating(true)
                 .select()
                 .apis(RequestHandlerSelectors.basePackage("com.revature.autosurvey.analytics.controller"))
                 .paths(PathSelectors.any())
