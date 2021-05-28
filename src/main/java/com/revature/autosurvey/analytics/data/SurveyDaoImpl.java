@@ -21,12 +21,11 @@ public class SurveyDaoImpl implements SurveyDao {
 	@Override
 	public Mono<Survey> getSurvey(String surveyId) {
 		WebClient wc = webClient.baseUrl(env.getProperty("GATEWAY_URL")).build();
-		Mono<Survey> survey = wc.get()
+		return wc.get()
 				.uri(uriBuilder -> uriBuilder.path("/survey/{surveyId}")
 				.build(surveyId))
 				.retrieve()
 				.bodyToMono(Survey.class);
-		return survey;
 
 	}
 

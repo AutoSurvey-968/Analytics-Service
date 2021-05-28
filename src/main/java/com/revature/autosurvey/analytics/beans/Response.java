@@ -1,6 +1,5 @@
 package com.revature.autosurvey.analytics.beans;
 
-import java.io.Serializable;
 import java.util.Map;
 import java.util.UUID;
 

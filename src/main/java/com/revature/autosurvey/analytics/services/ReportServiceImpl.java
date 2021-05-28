@@ -114,7 +114,7 @@ public class ReportServiceImpl implements ReportService {
 				Report report = new Report(s.getUuid().toString()); // Testing to see if we get the UUID from Survey, will probably change type of Report.getSurveyId to UUID later
 				report.setAverages(new HashMap<>());
 				report.setPercentages(new HashMap<>());
-				if(r.size()==0) {
+				if(r.isEmpty()) {
 					return report;
 				}
 				s.getQuestions().forEach(question -> {
