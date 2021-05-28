@@ -2,6 +2,7 @@ package com.revature.autosurvey.analytics.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -29,7 +30,7 @@ public class SecurityConfig {
 						(swe, e) -> Mono.fromRunnable(() -> swe.getResponse().setStatusCode(HttpStatus.FORBIDDEN)))
 				.and().csrf().disable().formLogin().disable().httpBasic().disable()
 				.authenticationManager(authenticationManager).securityContextRepository(securityContextRepository)
-				.authorizeExchange().pathMatchers("/swagger-resources/**", "/swagger-ui.html", "/swagger-ui/**",
+				.authorizeExchange().pathMatchers(HttpMethod.OPTIONS).permitAll().pathMatchers("/swagger-resources/**", "/swagger-ui.html", "/swagger-ui/**",
 						"/v2/api-docs", "/webjars/**")
 				.permitAll().anyExchange().authenticated().and().build();
 	}
