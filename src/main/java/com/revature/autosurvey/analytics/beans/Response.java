@@ -9,15 +9,25 @@ public class Response {
 	private UUID responseId;
 	private String batchName;
 
-	private WeekNum week;
+	private WeekEnum week;
 	private UUID surveyId;
 	private Map<String, String> surveyResponses;
 	
-	public enum WeekNum implements Serializable{
+	public enum WeekEnum implements Serializable{
 		A, B, ONE, TWO, THREE, FOUR, FIVE, SIX,
 		SEVEN, EIGHT, NINE, TEN, ELEVEN, TWELVE;
 	}
 	
+
+	public Response(UUID responseId, String batchName, WeekEnum week, UUID surveyId,
+			Map<String, String> surveyResponses) {
+		super();
+		this.responseId = responseId;
+		this.batchName = batchName;
+		this.week = week;
+		this.surveyId = surveyId;
+		this.surveyResponses = surveyResponses;
+	}
 
 	public UUID getResponseId() {
 		return responseId;
@@ -35,11 +45,11 @@ public class Response {
 		this.batchName = batchName;
 	}
 
-	public WeekNum getWeek() {
+	public WeekEnum getWeek() {
 		return week;
 	}
 
-	public void setWeek(WeekNum week) {
+	public void setWeek(WeekEnum week) {
 		this.week = week;
 	}
 

@@ -5,13 +5,10 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.revature.autosurvey.analytics.beans.Report;
 import com.revature.autosurvey.analytics.beans.Response;
-import com.revature.autosurvey.analytics.beans.Survey;
+import com.revature.autosurvey.analytics.beans.Response.WeekEnum;
 
-import net.minidev.json.JSONObject;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @Component
 public class ResponseDaoImpl implements ResponseDao {
@@ -25,12 +22,26 @@ public class ResponseDaoImpl implements ResponseDao {
 	@Override
 	public Flux<Response> getResponses(String surveyId) {
 		WebClient wc = webClient.baseUrl(env.getProperty("GATEWAY_URL")).build();
-		Flux<Response> job = wc.get()
-				.uri(uriBuilder -> uriBuilder.path("/responses/{surveyId}")
-				.build(surveyId))
+		Flux<Response> response = wc.get()
+				.uri(builder -> 
+					builder.pathSegment("/responses").queryParam("surveyId", surveyId).build())
 				.retrieve()
 				.bodyToFlux(Response.class);
-		return job;
+		return response;
+	}
+
+	@Override
+	public Flux<Response> getResponses(String surveyId, WeekEnum weekEnum) {
+		WebClient wc = webClient.baseUrl(env.getProperty("GATEWAY_URL")).build();
+		Flux<Response> response = wc.get()
+				.uri(builder -> 
+					builder.pathSegment("/responses")
+					.queryParam("surveyId", surveyId)
+					.queryParam("weekEnum", weekEnum)
+					.build())
+				.retrieve()
+				.bodyToFlux(Response.class);
+		return response;
 	}
 
 }

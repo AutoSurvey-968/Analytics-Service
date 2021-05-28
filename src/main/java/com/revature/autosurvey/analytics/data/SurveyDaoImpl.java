@@ -5,10 +5,8 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.revature.autosurvey.analytics.beans.Report;
 import com.revature.autosurvey.analytics.beans.Survey;
 
-import net.minidev.json.JSONObject;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -23,12 +21,13 @@ public class SurveyDaoImpl implements SurveyDao {
 	@Override
 	public Mono<Survey> getSurvey(String surveyId) {
 		WebClient wc = webClient.baseUrl(env.getProperty("GATEWAY_URL")).build();
-		Mono<Survey> job = wc.get()
+		Mono<Survey> survey = wc.get()
 				.uri(uriBuilder -> uriBuilder.path("/survey/{surveyId}")
 				.build(surveyId))
 				.retrieve()
 				.bodyToMono(Survey.class);
-		return job;
+		return survey;
+
 	}
 
 }

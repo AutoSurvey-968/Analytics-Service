@@ -15,6 +15,21 @@ public class Survey {
 	private List<Question> questions;
 	
 
+	public Survey(UUID uuid, LocalDateTime createdOn, String title, String description, String confirmation,
+			String version, List<String> mappedQuestions, List<Question> questions) {
+		super();
+		this.uuid = uuid;
+		this.createdOn = createdOn;
+		this.title = title;
+		this.description = description;
+		this.confirmation = confirmation;
+		this.version = version;
+		this.mappedQuestions = mappedQuestions;
+		this.questions = questions;
+	}
+	public Survey() {
+		super();
+	}
 	public UUID getUuid() {
 		return uuid;
 	}
