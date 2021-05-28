@@ -22,7 +22,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.revature.autosurvey.analytics.beans.Data;
 import com.revature.autosurvey.analytics.beans.Question;
 import com.revature.autosurvey.analytics.beans.Response;
-import com.revature.autosurvey.analytics.beans.Response.WeekEnum;
 import com.revature.autosurvey.analytics.beans.Survey;
 import com.revature.autosurvey.analytics.beans.Question.QuestionType;
 import com.revature.autosurvey.analytics.data.ResponseDao;
@@ -58,16 +57,20 @@ class ReportServiceImplTest {
 	private static Flux<Response> responses;
 	private static Flux<Response> oldresponses;
 	private static Mono<Survey> survey;
-	
+	private static String EmptyExample = "05-10-2021";
+	private static Flux<Response> emptyResponses;
+	private static String A = "05-17-2021";
+	private static String B = "05-24-2021";
 	@BeforeAll
 	public static void addResponses() {
+		emptyResponses = Flux.empty();
 		Map<String, String> surveyResponse1 = new HashMap<>();
 		surveyResponse1.put("mctest", "1");
 		surveyResponse1.put("avgTest", "4");
 		Response testResponse1 = new Response(
 				UUID.randomUUID(),
 				"test batchname", 
-				WeekEnum.B, 
+				B, 
 				UUID.randomUUID(), 
 				surveyResponse1);
 		
@@ -77,7 +80,7 @@ class ReportServiceImplTest {
 		Response testResponse2 = new Response(
 				UUID.randomUUID(), 
 				"test batchname", 
-				WeekEnum.B, 
+				B, 
 				UUID.randomUUID(), 
 				surveyResponse2);
 		
@@ -87,7 +90,7 @@ class ReportServiceImplTest {
 		Response testResponse3 = new Response(
 				UUID.randomUUID(), 
 				"test batchname", 
-				WeekEnum.B, 
+				B, 
 				UUID.randomUUID(), 
 				surveyResponse3);
 		
@@ -97,7 +100,7 @@ class ReportServiceImplTest {
 		Response testResponse4 = new Response(
 				UUID.randomUUID(), 
 				"test batchname", 
-				WeekEnum.B, 
+				B, 
 				UUID.randomUUID(), 
 				surveyResponse4);
 		
@@ -107,7 +110,7 @@ class ReportServiceImplTest {
 		Response testResponse5 = new Response(
 				UUID.randomUUID(), 
 				"test batchname", 
-				WeekEnum.B, 
+				B, 
 				UUID.randomUUID(), 
 				surveyResponse5);
 		
@@ -124,7 +127,7 @@ class ReportServiceImplTest {
 		Response testResponse1 = new Response(
 				UUID.randomUUID(),
 				"test batchname", 
-				WeekEnum.A, 
+				A, 
 				UUID.randomUUID(), 
 				surveyResponse1);
 		
@@ -134,7 +137,7 @@ class ReportServiceImplTest {
 		Response testResponse2 = new Response(
 				UUID.randomUUID(), 
 				"test batchname", 
-				WeekEnum.A, 
+				A, 
 				UUID.randomUUID(), 
 				surveyResponse2);
 		
@@ -144,7 +147,7 @@ class ReportServiceImplTest {
 		Response testResponse3 = new Response(
 				UUID.randomUUID(), 
 				"test batchname", 
-				WeekEnum.A, 
+				A, 
 				UUID.randomUUID(), 
 				surveyResponse3);
 		
@@ -154,7 +157,7 @@ class ReportServiceImplTest {
 		Response testResponse4 = new Response(
 				UUID.randomUUID(), 
 				"test batchname", 
-				WeekEnum.A, 
+				A, 
 				UUID.randomUUID(), 
 				surveyResponse4);
 		
@@ -164,7 +167,7 @@ class ReportServiceImplTest {
 		Response testResponse5 = new Response(
 				UUID.randomUUID(), 
 				"test batchname", 
-				WeekEnum.A, 
+				A, 
 				UUID.randomUUID(), 
 				surveyResponse5);
 		
@@ -210,8 +213,8 @@ class ReportServiceImplTest {
 	
 	@Test
 	void basicFunctionality() {
-		Mockito.when(responseDao.getResponses("1",WeekEnum.valueOf("A"))).thenReturn(oldresponses);
-		Mockito.when(responseDao.getResponses("1",WeekEnum.valueOf("B"))).thenReturn(responses);
+		Mockito.when(responseDao.getResponses("1", A)).thenReturn(oldresponses);
+		Mockito.when(responseDao.getResponses("1",EmptyExample)).thenReturn(emptyResponses);
 		Mockito.when(surveyDao.getSurvey("1")).thenReturn(survey);
 		Map<String,Data> mctest= new HashMap<>();
 		Map<String,Map<String,Data>> percentages= new HashMap<>();
@@ -226,15 +229,15 @@ class ReportServiceImplTest {
 		Data avgData = new Data();
 		avgData.setDatum(1.75);
 		averages.put("avgTest", avgData);
-	 	assertEquals(percentages,repService.getReport("1", WeekEnum.valueOf("A")).block().getPercentages(), "We should get a 25/75 split");
-	 	assertEquals(averages, repService.getReport("1", WeekEnum.valueOf("A")).block().getAverages(),"We should get the average of 1, 2, 2, and 2");
+	 	assertEquals(percentages,repService.getReport("1", A).block().getPercentages(), "We should get a 25/75 split");
+	 	assertEquals(averages, repService.getReport("1", A).block().getAverages(),"We should get the average of 1, 2, 2, and 2");
 	}
 	
 	@Test
 	void deltaFunctionality() {
 
-		Mockito.when(responseDao.getResponses("1",WeekEnum.valueOf("A"))).thenReturn(oldresponses);
-		Mockito.when(responseDao.getResponses("1",WeekEnum.valueOf("B"))).thenReturn(responses);
+		Mockito.when(responseDao.getResponses("1",A)).thenReturn(oldresponses);
+		Mockito.when(responseDao.getResponses("1",B)).thenReturn(responses);
 		Mockito.when(surveyDao.getSurvey("1")).thenReturn(survey);
 		Map<String,Data> mctest= new HashMap<>();
 		Map<String,Map<String,Data>> percentages= new HashMap<>();
@@ -258,11 +261,11 @@ class ReportServiceImplTest {
 		
 		averages.put("avgTest", avgData);
 	 	
-	 	Map<String, Data> results = repService.getReport("1", WeekEnum.valueOf("B")).block().getPercentages().get("mctest");
+	 	Map<String, Data> results = repService.getReport("1", B).block().getPercentages().get("mctest");
 	 	assertEquals(percentages.get("mctest").get("1").getDatum(),results.get("1").getDatum(), "We should get a '1' as the data");
 	 	assertEquals(percentages.get("mctest").get("1").getDelta(),results.get("1").getDelta(), "We should get a delta of 0.75");
 	 	assertEquals(percentages.get("mctest").get("2"),results.get("2"), "We should get a '0' as the data with a delta of -0.75");
-	 	assertEquals(averages, repService.getReport("1", WeekEnum.valueOf("B")).block().getAverages(),"We should get the average of 2, 2, 2, and 4, with a delta of 0.75");
+	 	assertEquals(averages, repService.getReport("1", B).block().getAverages(),"We should get the average of 2, 2, 2, and 4, with a delta of 0.75");
 	}
 	
 	
