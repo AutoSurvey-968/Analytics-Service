@@ -1,12 +1,14 @@
 package com.revature.autosurvey.analytics.controllers;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.revature.autosurvey.analytics.beans.Report;
-import com.revature.autosurvey.analytics.beans.Response.WeekEnum;
 import com.revature.autosurvey.analytics.services.ReportService;
 
 import reactor.core.publisher.Mono;
@@ -23,13 +25,13 @@ public class ReportController {
 		return reportService.getReport(surveyId).map(report -> ResponseEntity.status(200).body(report));
 	}
 	
-	@GetMapping(params = {"surveyId", "weekEnum"})
-	public Mono<ResponseEntity<Report>> getReport(String surveyId, WeekEnum weekEnum) {
-		return reportService.getReport(surveyId, weekEnum).map(report -> ResponseEntity.status(200).body(report));
+	@GetMapping(params = {"surveyId", "weekDay"})
+	public Mono<ResponseEntity<Report>> getReport(String surveyId, String weekDay) {
+		return reportService.getReport(surveyId, weekDay).map(report -> ResponseEntity.status(200).body(report));
 	}
 	
-	@GetMapping(params = {"surveyId", "weekEnum", "batchName"})
-	public Mono<ResponseEntity<Report>> getReport(String surveyId, WeekEnum weekEnum, String batchName) {
-		return reportService.getReport(surveyId, weekEnum, batchName).map(report -> ResponseEntity.status(200).body(report));
+	@GetMapping(params = {"surveyId", "weekDay", "batchName"})
+	public Mono<ResponseEntity<Report>> getReport(String surveyId, String weekDay, String batchName) {
+		return reportService.getReport(surveyId, weekDay, batchName).map(report -> ResponseEntity.status(200).body(report));
 	}
 }

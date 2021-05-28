@@ -1,5 +1,7 @@
 package com.revature.autosurvey.analytics.services;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +14,6 @@ import com.revature.autosurvey.analytics.beans.Question;
 import com.revature.autosurvey.analytics.beans.Question.QuestionType;
 import com.revature.autosurvey.analytics.beans.Report;
 import com.revature.autosurvey.analytics.beans.Response;
-import com.revature.autosurvey.analytics.beans.Response.WeekEnum;
 import com.revature.autosurvey.analytics.beans.Survey;
 import com.revature.autosurvey.analytics.data.ResponseDao;
 import com.revature.autosurvey.analytics.data.SurveyDao;
@@ -36,6 +37,8 @@ public class ReportServiceImpl implements ReportService {
 	public void setSurveyDao(SurveyDao surveyDao) {
 		this.surveyDao=surveyDao;
 	}
+	
+	private static DateTimeFormatter DTF = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 
 	@Override
 	public Mono<Report> getReport(String surveyId) {
@@ -47,40 +50,37 @@ public class ReportServiceImpl implements ReportService {
 
 
 	@Override
-	public Mono<Report> getReport(String surveyId, WeekEnum weekEnum, String batchName) {
+	public Mono<Report> getReport(String surveyId, String weekDay, String batchName) {
 		
 		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
-		Flux<Response> responses = responseDao.getResponses(surveyId, weekEnum, batchName);
-		if(weekEnum!=WeekEnum.A) {
-
-			Flux<Response> oldResponses = responseDao.getResponses(surveyId, WeekEnum.values()[weekEnum.ordinal()-1], batchName);
-			Mono<Report> oldReport = createReport(survey, oldResponses);
-			Mono<Report> newReport = createReport(survey, responses);
-			return addDeltaToReport(oldReport, newReport);
-		} else {
-			return createReport(survey,responses);
-		}
+		Flux<Response> responses = responseDao.getResponses(surveyId, weekDay, batchName);
+		
+		LocalDate ld = LocalDate.parse(weekDay, DTF);
+		Flux<Response> oldResponses = responseDao.getResponses(surveyId, ld.minusDays(7).format(DTF), batchName);
+		Mono<Report> oldReport = createReport(survey, oldResponses);
+		Mono<Report> newReport = createReport(survey, responses);
+		return addDeltaToReport(oldReport, newReport);
 	}
 	
 	@Override
-	public Mono<Report> getReport(String surveyId, WeekEnum weekEnum) {
+	public Mono<Report> getReport(String surveyId, String weekDay) {
 		
 		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
-		Flux<Response> responses = responseDao.getResponses(surveyId, weekEnum);
-		if(weekEnum!=WeekEnum.A) {
+		Flux<Response> responses = responseDao.getResponses(surveyId, weekDay);	
 
-			Flux<Response> oldResponses = responseDao.getResponses(surveyId, WeekEnum.values()[weekEnum.ordinal()-1]);
-			Mono<Report> oldReport = createReport(survey, oldResponses);
-			Mono<Report> newReport = createReport(survey, responses);
-			return addDeltaToReport(oldReport, newReport);
-		} else {
-			return createReport(survey,responses);
-		}
+		LocalDate ld = LocalDate.parse(weekDay, DTF);
+		Flux<Response> oldResponses = responseDao.getResponses(surveyId, ld.minusDays(7).format(DTF));
+		Mono<Report> oldReport = createReport(survey, oldResponses);
+		Mono<Report> newReport = createReport(survey, responses);
+		return addDeltaToReport(oldReport, newReport);
 	}
 
 	private Mono<Report> addDeltaToReport(Mono<Report> oldReport, Mono<Report> newReport) {
 		return newReport.flatMap(report -> 
 			oldReport.map(old -> {
+				if(old.getAverages().size() == 0 && old.getPercentages().size() == 0) {
+					return report;
+				}
 				Map<String, Data> averages = report.getAverages();
 				for(Entry<String, Data> question : averages.entrySet()) {
 					Data newData = question.getValue();
@@ -108,10 +108,15 @@ public class ReportServiceImpl implements ReportService {
 		 * The map of the list of responses' content will return a Mono of Report that's been constructed with populated fields to the flatMap,
 		 * flatMap will return the Mono of the previous map.
 		 */
-		return survey.flatMap(s -> responses.collectList().map(r -> {
+		return survey.flatMap(s -> {
+			Mono<List<Response>> toMap = responses.collectList();
+			return toMap.map(r -> {
 				Report report = new Report(s.getUuid().toString()); // Testing to see if we get the UUID from Survey, will probably change type of Report.getSurveyId to UUID later
 				report.setAverages(new HashMap<>());
 				report.setPercentages(new HashMap<>());
+				if(r.size()==0) {
+					return report;
+				}
 				s.getQuestions().forEach(question -> {
 					
 					//currently using short answer because number doesn't exist
@@ -126,8 +131,8 @@ public class ReportServiceImpl implements ReportService {
 				});
 
 				return report;
-			})
-		);
+			});
+		});
 	}
 	
 	private Double average(Question question, List<Response> r) {

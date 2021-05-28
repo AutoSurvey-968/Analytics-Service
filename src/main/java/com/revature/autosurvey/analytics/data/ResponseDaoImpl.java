@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.revature.autosurvey.analytics.beans.Response;
-import com.revature.autosurvey.analytics.beans.Response.WeekEnum;
 
 import reactor.core.publisher.Flux;
 
@@ -31,13 +30,13 @@ public class ResponseDaoImpl implements ResponseDao {
 	}
 
 	@Override
-	public Flux<Response> getResponses(String surveyId, WeekEnum weekEnum) {
+	public Flux<Response> getResponses(String surveyId, String weekDay) {
 		WebClient wc = webClient.baseUrl(env.getProperty("GATEWAY_URL")).build();
 		Flux<Response> response = wc.get()
 				.uri(builder -> 
 					builder.pathSegment("/responses")
 					.queryParam("surveyId", surveyId)
-					.queryParam("weekEnum", weekEnum)
+					.queryParam("weekDay", weekDay)
 					.build())
 				.retrieve()
 				.bodyToFlux(Response.class);
@@ -45,13 +44,13 @@ public class ResponseDaoImpl implements ResponseDao {
 	}
 
 	@Override
-	public Flux<Response> getResponses(String surveyId, WeekEnum weekEnum, String batchName) {
+	public Flux<Response> getResponses(String surveyId, String weekDay, String batchName) {
 		WebClient wc = webClient.baseUrl(env.getProperty("GATEWAY_URL")).build();
 		Flux<Response> response = wc.get()
 				.uri(builder -> 
 					builder.pathSegment("/responses")
 					.queryParam("surveyId", surveyId)
-					.queryParam("weekEnum", weekEnum)
+					.queryParam("weekDay", weekDay)
 					.queryParam("batchName", batchName)
 					.build())
 				.retrieve()

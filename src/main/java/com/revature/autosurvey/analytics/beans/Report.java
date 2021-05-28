@@ -4,17 +4,20 @@ import java.util.Map;
 
 public class Report {
 	private String surveyId;
-	private String weekEnum;
+	private String weekDay;
 	private String batchString;
 	private Map<String, Data> averages; //numeric
 	private Map<String, Map<String, Data>> percentages; //multiple choice
 	
-	public Report(String surveyId, String weekEnum) {
+	public Report(String surveyId, String weekDay) {
 		this.surveyId=surveyId;
-		this.weekEnum=weekEnum;
+		this.weekDay=weekDay;
 	}
 	public Report(String surveyId) {
 		this.surveyId=surveyId;
+	}
+	public Report() {
+		super();
 	}
 
 	public String getSurveyId() {
@@ -24,12 +27,12 @@ public class Report {
 	public void setSurveyId(String surveyId) {
 		this.surveyId = surveyId;
 	}
-	public String getWeekEnum() {
-		return weekEnum;
+	public String getWeekDay() {
+		return weekDay;
 	}
 
-	public void setWeekEnum(String weekEnum) {
-		this.weekEnum = weekEnum;
+	public void setWeekDay(String weekEnum) {
+		this.weekDay = weekEnum;
 	}
 	public String getBatchString() {
 		return batchString;
