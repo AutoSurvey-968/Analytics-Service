@@ -14,13 +14,10 @@ public class ResponseDaoImpl implements ResponseDao {
 	
 	@Autowired
 	private WebClient.Builder webClient;
-	
-	@Autowired
-	private Environment env;
 
 	@Override
 	public Flux<Response> getResponses(String surveyId) {
-		WebClient wc = webClient.baseUrl(env.getProperty("GATEWAY_URL")).build();
+		WebClient wc = webClient.baseUrl(System.getenv("GATEWAY_URL")).build();
 		Flux<Response> response = wc.get()
 				.uri(builder -> 
 					builder.pathSegment("/responses").queryParam("surveyId", surveyId).build())
@@ -31,7 +28,7 @@ public class ResponseDaoImpl implements ResponseDao {
 
 	@Override
 	public Flux<Response> getResponses(String surveyId, String weekDay) {
-		WebClient wc = webClient.baseUrl(env.getProperty("GATEWAY_URL")).build();
+		WebClient wc = webClient.baseUrl(System.getenv("GATEWAY_URL")).build();
 		return wc.get()
 				.uri(builder -> 
 					builder.pathSegment("/responses")
@@ -44,7 +41,7 @@ public class ResponseDaoImpl implements ResponseDao {
 
 	@Override
 	public Flux<Response> getResponses(String surveyId, String weekDay, String batchName) {
-		WebClient wc = webClient.baseUrl(env.getProperty("GATEWAY_URL")).build();
+		WebClient wc = webClient.baseUrl(System.getenv("GATEWAY_URL")).build();
 		return wc.get()
 				.uri(builder -> 
 					builder.pathSegment("/responses")
