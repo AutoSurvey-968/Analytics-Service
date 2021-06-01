@@ -14,13 +14,10 @@ public class SurveyDaoImpl implements SurveyDao {
 	
 	@Autowired
 	private WebClient.Builder webClient;
-	
-	@Autowired
-	private Environment env;
 
 	@Override
 	public Mono<Survey> getSurvey(String surveyId) {
-		WebClient wc = webClient.baseUrl(env.getProperty("GATEWAY_URL")).build();
+		WebClient wc = webClient.baseUrl(System.getenv("GATEWAY_URL")).build();
 		return wc.get()
 				.uri(uriBuilder -> uriBuilder.path("/survey/{surveyId}")
 				.build(surveyId))
