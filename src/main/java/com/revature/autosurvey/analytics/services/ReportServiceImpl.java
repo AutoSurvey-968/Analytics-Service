@@ -38,7 +38,7 @@ public class ReportServiceImpl implements ReportService {
 		this.surveyDao=surveyDao;
 	}
 	
-	private static DateTimeFormatter DTF = DateTimeFormatter.ofPattern("MM-dd-yyyy");
+	private static DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 	@Override
 	public Mono<Report> getReport(String surveyId) {
