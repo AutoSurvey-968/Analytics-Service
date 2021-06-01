@@ -57,10 +57,10 @@ class ReportServiceImplTest {
 	private static Flux<Response> responses;
 	private static Flux<Response> oldresponses;
 	private static Mono<Survey> survey;
-	private static String EmptyExample = "05-10-2021";
+	private static String EmptyExample = "2021-05-10";
 	private static Flux<Response> emptyResponses;
-	private static String A = "05-17-2021";
-	private static String B = "05-24-2021";
+	private static String A = "2021-05-17";
+	private static String B = "2021-05-24";
 	@BeforeAll
 	public static void addResponses() {
 		emptyResponses = Flux.empty();
