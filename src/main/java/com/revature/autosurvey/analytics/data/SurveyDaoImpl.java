@@ -19,7 +19,7 @@ public class SurveyDaoImpl implements SurveyDao {
 	public Mono<Survey> getSurvey(String surveyId) {
 		WebClient wc = webClient.baseUrl(System.getenv("GATEWAY_URL")).build();
 		return wc.get()
-				.uri(uriBuilder -> uriBuilder.path("/surveys/{surveyId}")
+				.uri(uriBuilder -> uriBuilder.path("surveys/{surveyId}")
 				.build(surveyId))
 				.retrieve()
 				.bodyToMono(Survey.class);
