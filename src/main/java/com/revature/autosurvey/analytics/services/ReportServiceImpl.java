@@ -140,11 +140,19 @@ public class ReportServiceImpl implements ReportService {
 	
 	private Double average(Question question, List<Response> r) {
 		Double average = 0.0;
+		if(question.getTitle() == null) {
+			return average;
+		}
 		int size= r.size();
 
 		//if processible make an average and add to report
 		for(int i = 0; i < r.size(); i++) {
-			if(r.get(i).getSurveyResponses().get(question.getTitle())!=null&&!r.get(i).getSurveyResponses().get(question.getTitle()).equals("")){
+			Response res = r.get(i);
+			if(res.getSurveyResponses() == null) {
+				size--;
+				continue;
+			}
+			if(res.getSurveyResponses().get(question.getTitle())!=null&&!res.getSurveyResponses().get(question.getTitle()).equals("")){
 				average += Double.valueOf(r.get(i).getSurveyResponses().get(question.getTitle()));
 
 			}else {
