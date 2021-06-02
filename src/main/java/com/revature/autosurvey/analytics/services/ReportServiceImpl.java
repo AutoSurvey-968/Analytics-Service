@@ -176,6 +176,9 @@ public class ReportServiceImpl implements ReportService {
 		);
 		//adding up choices
 		for(int i = 0; i < r.size(); i++) {
+			if(r.get(i) == null || r.get(i).getSurveyResponses() == null || question.getTitle() == null) {
+				continue;
+			}
 			String questionTitle = r.get(i).getSurveyResponses().get(question.getTitle());
 			if(choicesMap.keySet().contains(questionTitle)) {
 				double value = choicesMap.get(questionTitle).getDatum();
