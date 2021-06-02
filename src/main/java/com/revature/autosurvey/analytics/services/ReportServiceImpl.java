@@ -124,8 +124,10 @@ public class ReportServiceImpl implements ReportService {
 					}
 					//currently using short answer because number doesn't exist
 					if(question.getQuestionType() == QuestionType.RADIO) {
-						Data d = new Data();
-						d.setDatum(average(question,r));
+						Data d = average(question, r);
+						if(d==null) {
+							return;
+						}
 						report.getAverages().put(question.getTitle(), d);
 					}
 					if(question.getQuestionType() == QuestionType.DROPDOWN) {
@@ -138,10 +140,11 @@ public class ReportServiceImpl implements ReportService {
 		});
 	}
 	
-	private Double average(Question question, List<Response> r) {
+	private Data average(Question question, List<Response> r) {
 		Double average = 0.0;
+		Data d = new Data();
 		if(question.getTitle() == null) {
-			return average;
+			return null;
 		}
 		int size= r.size();
 
@@ -165,9 +168,10 @@ public class ReportServiceImpl implements ReportService {
 			}
 		}
 		if(size==0) {
-			return 0.0;
+			return null;
 		}
-		return average/size;
+		d.setDatum(average/size);
+		return d;
 	}
 
 	private Map<String, Data> percentages(Question question, List<Response> r){
