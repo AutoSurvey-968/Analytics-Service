@@ -164,8 +164,10 @@ public class ReportServiceImpl implements ReportService {
 				size--;
 			}
 		}
-		average /= size;
-		return average;
+		if(size==0) {
+			return 0.0;
+		}
+		return average/size;
 	}
 
 	private Map<String, Data> percentages(Question question, List<Response> r){
