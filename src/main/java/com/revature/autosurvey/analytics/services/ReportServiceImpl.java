@@ -153,7 +153,12 @@ public class ReportServiceImpl implements ReportService {
 				continue;
 			}
 			if(res.getSurveyResponses().get(question.getTitle())!=null&&!res.getSurveyResponses().get(question.getTitle()).equals("")){
-				average += Double.valueOf(r.get(i).getSurveyResponses().get(question.getTitle()));
+				String s = r.get(i).getSurveyResponses().get(question.getTitle());
+				try {
+					average += Double.valueOf(s);
+				} catch (NumberFormatException e) {
+					size--;
+				}
 
 			}else {
 				size--;
