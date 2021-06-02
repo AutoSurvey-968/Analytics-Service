@@ -1,7 +1,6 @@
 package com.revature.autosurvey.analytics.data;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -20,7 +19,7 @@ public class ResponseDaoImpl implements ResponseDao {
 		WebClient wc = webClient.baseUrl(System.getenv("GATEWAY_URL")).build();
 		Flux<Response> response = wc.get()
 				.uri(builder -> 
-					builder.pathSegment("/responses").queryParam("surveyId", surveyId).build())
+					builder.pathSegment("responses").queryParam("surveyId", surveyId).build())
 				.retrieve()
 				.bodyToFlux(Response.class);
 		return response;
@@ -31,7 +30,7 @@ public class ResponseDaoImpl implements ResponseDao {
 		WebClient wc = webClient.baseUrl(System.getenv("GATEWAY_URL")).build();
 		return wc.get()
 				.uri(builder -> 
-					builder.pathSegment("/responses")
+					builder.pathSegment("responses")
 					.queryParam("surveyId", surveyId)
 					.queryParam("weekDay", weekDay)
 					.build())
@@ -44,7 +43,7 @@ public class ResponseDaoImpl implements ResponseDao {
 		WebClient wc = webClient.baseUrl(System.getenv("GATEWAY_URL")).build();
 		return wc.get()
 				.uri(builder -> 
-					builder.pathSegment("/responses")
+					builder.pathSegment("responses")
 					.queryParam("surveyId", surveyId)
 					.queryParam("weekDay", weekDay)
 					.queryParam("batchName", batchName)
