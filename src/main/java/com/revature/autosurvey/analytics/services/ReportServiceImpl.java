@@ -120,12 +120,12 @@ public class ReportServiceImpl implements ReportService {
 				s.getQuestions().forEach(question -> {
 					
 					//currently using short answer because number doesn't exist
-					if(question.getQuestionType() == QuestionType.SHORT_ANSWER) {
+					if(question.getQuestionType() == QuestionType.RADIO || question.getQuestionType() == QuestionType.DROPDOWN) {
 						Data d = new Data();
 						d.setDatum(average(question,r));
 						report.getAverages().put(question.getTitle(), d);
 					}
-					else if(question.getQuestionType() == QuestionType.MULTIPLE_CHOICE) {
+					if(question.getQuestionType() == QuestionType.RADIO || question.getQuestionType() == QuestionType.DROPDOWN) {
 						report.getPercentages().put(question.getTitle(), percentages(question, r));
 					}
 				});
