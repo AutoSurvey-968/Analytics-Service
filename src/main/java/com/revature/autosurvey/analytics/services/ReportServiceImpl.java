@@ -123,12 +123,12 @@ public class ReportServiceImpl implements ReportService {
 						return;
 					}
 					//currently using short answer because number doesn't exist
-					if(question.getQuestionType() == QuestionType.RADIO || question.getQuestionType() == QuestionType.DROPDOWN) {
+					if(question.getQuestionType() == QuestionType.RADIO) {
 						Data d = new Data();
 						d.setDatum(average(question,r));
 						report.getAverages().put(question.getTitle(), d);
 					}
-					if(question.getQuestionType() == QuestionType.RADIO || question.getQuestionType() == QuestionType.DROPDOWN) {
+					if(question.getQuestionType() == QuestionType.DROPDOWN) {
 						report.getPercentages().put(question.getTitle(), percentages(question, r));
 					}
 				});
