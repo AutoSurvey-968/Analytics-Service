@@ -31,8 +31,8 @@ public class ResponseDaoImpl implements ResponseDao {
 		return wc.get()
 				.uri(builder -> 
 					builder.pathSegment("responses")
-					.queryParam("idd", surveyId)
-					.queryParam("weekStartd", weekDay)
+					.queryParam("id", surveyId)
+					.queryParam("weekStart", weekDay)
 					.build())
 				.retrieve()
 				.bodyToFlux(Response.class);
@@ -44,9 +44,9 @@ public class ResponseDaoImpl implements ResponseDao {
 		return wc.get()
 				.uri(builder -> 
 					builder.pathSegment("responses")
-					.queryParam("idd", surveyId)
-					.queryParam("weekStartd", weekDay)
-					.queryParam("batchd", batchName)
+					.queryParam("id", surveyId)
+					.queryParam("weekStart", weekDay)
+					.queryParam("batch", batchName)
 					.build())
 				.retrieve()
 				.bodyToFlux(Response.class);
