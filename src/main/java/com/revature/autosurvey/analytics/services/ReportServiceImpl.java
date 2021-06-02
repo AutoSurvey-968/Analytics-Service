@@ -118,7 +118,10 @@ public class ReportServiceImpl implements ReportService {
 					return report;
 				}
 				s.getQuestions().forEach(question -> {
-					
+
+					if(question == null) {
+						return;
+					}
 					//currently using short answer because number doesn't exist
 					if(question.getQuestionType() == QuestionType.RADIO || question.getQuestionType() == QuestionType.DROPDOWN) {
 						Data d = new Data();
