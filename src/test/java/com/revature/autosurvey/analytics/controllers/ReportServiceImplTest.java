@@ -19,7 +19,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.revature.autosurvey.analytics.beans.Data;
+import com.revature.autosurvey.analytics.beans.AnalyticsData;
 import com.revature.autosurvey.analytics.beans.Question;
 import com.revature.autosurvey.analytics.beans.Response;
 import com.revature.autosurvey.analytics.beans.Survey;
@@ -216,17 +216,17 @@ class ReportServiceImplTest {
 		Mockito.when(responseDao.getResponses("1", A)).thenReturn(oldresponses);
 		Mockito.when(responseDao.getResponses("1",EmptyExample)).thenReturn(emptyResponses);
 		Mockito.when(surveyDao.getSurvey("1")).thenReturn(survey);
-		Map<String,Data> mctest= new HashMap<>();
-		Map<String,Map<String,Data>> percentages= new HashMap<>();
-		Map<String, Data> averages=new HashMap<>();
-		Data oneData = new Data();
+		Map<String,AnalyticsData> mctest= new HashMap<>();
+		Map<String,Map<String,AnalyticsData>> percentages= new HashMap<>();
+		Map<String, AnalyticsData> averages=new HashMap<>();
+		AnalyticsData oneData = new AnalyticsData();
 		oneData.setDatum(0.25);
-		Data twoData = new Data();
+		AnalyticsData twoData = new AnalyticsData();
 		twoData.setDatum(0.75);
 		mctest.put("1", oneData);
 		mctest.put("2", twoData);
 		percentages.put("mctest", mctest);
-		Data avgData = new Data();
+		AnalyticsData avgData = new AnalyticsData();
 		avgData.setDatum(1.75);
 		averages.put("avgTest", avgData);
 	 	assertEquals(percentages,repService.getReport("1", A).block().getPercentages(), "We should get a 25/75 split");
@@ -239,13 +239,13 @@ class ReportServiceImplTest {
 		Mockito.when(responseDao.getResponses("1",A)).thenReturn(oldresponses);
 		Mockito.when(responseDao.getResponses("1",B)).thenReturn(responses);
 		Mockito.when(surveyDao.getSurvey("1")).thenReturn(survey);
-		Map<String,Data> mctest= new HashMap<>();
-		Map<String,Map<String,Data>> percentages= new HashMap<>();
-		Map<String, Data> averages=new HashMap<>();
+		Map<String,AnalyticsData> mctest= new HashMap<>();
+		Map<String,Map<String,AnalyticsData>> percentages= new HashMap<>();
+		Map<String, AnalyticsData> averages=new HashMap<>();
 		
-		Data oneData = new Data();
-		Data twoData = new Data();
-		Data avgData = new Data();
+		AnalyticsData oneData = new AnalyticsData();
+		AnalyticsData twoData = new AnalyticsData();
+		AnalyticsData avgData = new AnalyticsData();
 		
 	 	oneData.setDatum(1);
 	 	oneData.setDelta(0.75);
@@ -261,7 +261,7 @@ class ReportServiceImplTest {
 		
 		averages.put("avgTest", avgData);
 	 	
-	 	Map<String, Data> results = repService.getReport("1", B).block().getPercentages().get("mctest");
+	 	Map<String, AnalyticsData> results = repService.getReport("1", B).block().getPercentages().get("mctest");
 	 	assertEquals(percentages.get("mctest").get("1").getDatum(),results.get("1").getDatum(), "We should get a '1' as the data");
 	 	assertEquals(percentages.get("mctest").get("1").getDelta(),results.get("1").getDelta(), "We should get a delta of 0.75");
 	 	assertEquals(percentages.get("mctest").get("2"),results.get("2"), "We should get a '0' as the data with a delta of -0.75");

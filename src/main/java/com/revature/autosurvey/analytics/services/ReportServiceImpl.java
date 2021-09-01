@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.revature.autosurvey.analytics.beans.Data;
+import com.revature.autosurvey.analytics.beans.AnalyticsData;
 import com.revature.autosurvey.analytics.beans.Question;
 import com.revature.autosurvey.analytics.beans.Question.QuestionType;
 import com.revature.autosurvey.analytics.beans.Report;
@@ -38,7 +38,7 @@ public class ReportServiceImpl implements ReportService {
 		this.surveyDao=surveyDao;
 	}
 	
-	private static DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+	private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 	@Override
 	public Mono<Report> getReport(String surveyId) {
@@ -55,8 +55,8 @@ public class ReportServiceImpl implements ReportService {
 		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
 		Flux<Response> responses = responseDao.getResponses(surveyId, weekDay, batchName);
 		
-		LocalDate ld = LocalDate.parse(weekDay, DTF);
-		Flux<Response> oldResponses = responseDao.getResponses(surveyId, ld.minusDays(7).format(DTF), batchName);
+		LocalDate ld = LocalDate.parse(weekDay, DATE_TIME_FORMAT);
+		Flux<Response> oldResponses = responseDao.getResponses(surveyId, ld.minusDays(7).format(DATE_TIME_FORMAT), batchName);
 		Mono<Report> oldReport = createReport(survey, oldResponses);
 		Mono<Report> newReport = createReport(survey, responses);
 		return addDeltaToReport(oldReport, newReport);
@@ -68,8 +68,8 @@ public class ReportServiceImpl implements ReportService {
 		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
 		Flux<Response> responses = responseDao.getResponses(surveyId, weekDay);	
 
-		LocalDate ld = LocalDate.parse(weekDay, DTF);
-		Flux<Response> oldResponses = responseDao.getResponses(surveyId, ld.minusDays(7).format(DTF));
+		LocalDate ld = LocalDate.parse(weekDay, DATE_TIME_FORMAT);
+		Flux<Response> oldResponses = responseDao.getResponses(surveyId, ld.minusDays(7).format(DATE_TIME_FORMAT));
 		Mono<Report> oldReport = createReport(survey, oldResponses);
 		Mono<Report> newReport = createReport(survey, responses);
 		return addDeltaToReport(oldReport, newReport);
@@ -81,18 +81,18 @@ public class ReportServiceImpl implements ReportService {
 				if(old.getAverages().size() == 0 && old.getPercentages().size() == 0) {
 					return report;
 				}
-				Map<String, Data> averages = report.getAverages();
-				for(Entry<String, Data> question : averages.entrySet()) {
-					Data newData = question.getValue();
-					Data oldData = old.getAverages().get(question.getKey());
+				Map<String, AnalyticsData> averages = report.getAverages();
+				for(Entry<String, AnalyticsData> question : averages.entrySet()) {
+					AnalyticsData newData = question.getValue();
+					AnalyticsData oldData = old.getAverages().get(question.getKey());
 					newData.setDelta(newData.getDatum()-oldData.getDatum());
 				}
-				Map<String, Map<String, Data>> percentages = report.getPercentages();
-				for(Entry<String, Map<String, Data>> question : percentages.entrySet()) {
-					Map<String, Data> sub = question.getValue();
-					for(Entry<String, Data> option : sub.entrySet()) {
-						Data newData = option.getValue();
-						Data oldData = old.getPercentages().get(question.getKey()).get(option.getKey());
+				Map<String, Map<String, AnalyticsData>> percentages = report.getPercentages();
+				for(Entry<String, Map<String, AnalyticsData>> question : percentages.entrySet()) {
+					Map<String, AnalyticsData> sub = question.getValue();
+					for(Entry<String, AnalyticsData> option : sub.entrySet()) {
+						AnalyticsData newData = option.getValue();
+						AnalyticsData oldData = old.getPercentages().get(question.getKey()).get(option.getKey());
 						newData.setDelta(newData.getDatum()-oldData.getDatum());
 					}
 				}
@@ -124,7 +124,7 @@ public class ReportServiceImpl implements ReportService {
 					}
 					//currently using short answer because number doesn't exist
 					if(question.getQuestionType() == QuestionType.RADIO) {
-						Data d = average(question, r);
+						AnalyticsData d = average(question, r);
 						if(d==null) {
 							return;
 						}
@@ -140,9 +140,9 @@ public class ReportServiceImpl implements ReportService {
 		});
 	}
 	
-	private Data average(Question question, List<Response> r) {
+	private AnalyticsData average(Question question, List<Response> r) {
 		Double average = 0.0;
-		Data d = new Data();
+		AnalyticsData d = new AnalyticsData();
 		if(question.getTitle() == null) {
 			return null;
 		}
@@ -151,12 +151,12 @@ public class ReportServiceImpl implements ReportService {
 		//if processible make an average and add to report
 		for(int i = 0; i < r.size(); i++) {
 			Response res = r.get(i);
-			if(res.getSurveyResponses() == null) {
+			if(res.getResponses() == null) {
 				size--;
 				continue;
 			}
-			if(res.getSurveyResponses().get(question.getTitle())!=null&&!res.getSurveyResponses().get(question.getTitle()).equals("")){
-				String s = r.get(i).getSurveyResponses().get(question.getTitle());
+			if(res.getResponses().get(question.getTitle())!=null&&!res.getResponses().get(question.getTitle()).equals("")){
+				String s = r.get(i).getResponses().get(question.getTitle());
 				try {
 					average += Double.valueOf(s);
 				} catch (NumberFormatException e) {
@@ -174,12 +174,12 @@ public class ReportServiceImpl implements ReportService {
 		return d;
 	}
 
-	private Map<String, Data> percentages(Question question, List<Response> r){
-		Map<String, Data> choicesMap = new HashMap<>();
+	private Map<String, AnalyticsData> percentages(Question question, List<Response> r){
+		Map<String, AnalyticsData> choicesMap = new HashMap<>();
 		int total = 0;
 		question.getChoices().forEach(choice -> {
 
-			Data d = new Data();
+			AnalyticsData d = new AnalyticsData();
 			d.setDatum(0.0);
 			choicesMap.put(choice, d);
 		}
@@ -187,21 +187,21 @@ public class ReportServiceImpl implements ReportService {
 		);
 		//adding up choices
 		for(int i = 0; i < r.size(); i++) {
-			if(r.get(i) == null || r.get(i).getSurveyResponses() == null || question.getTitle() == null) {
+			if(r.get(i) == null || r.get(i).getResponses() == null || question.getTitle() == null) {
 				continue;
 			}
-			String questionTitle = r.get(i).getSurveyResponses().get(question.getTitle());
+			String questionTitle = r.get(i).getResponses().get(question.getTitle());
 			if(choicesMap.keySet().contains(questionTitle)) {
 				double value = choicesMap.get(questionTitle).getDatum();
-				Data d = new Data();
+				AnalyticsData d = new AnalyticsData();
 				d.setDatum(++value);
 				choicesMap.put(questionTitle, d);
 				total++;
 			}
 			
 		}//creating percentages
-        for (Map.Entry<String, Data> choiceEntry : choicesMap.entrySet()) {
-			Data result = choiceEntry.getValue();
+        for (Map.Entry<String, AnalyticsData> choiceEntry : choicesMap.entrySet()) {
+			AnalyticsData result = choiceEntry.getValue();
 			if(total!=0) {
 				result.setDatum(result.getDatum()/total);
 				choicesMap.put(choiceEntry.getKey(), result);
