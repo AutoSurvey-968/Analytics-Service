@@ -38,3 +38,5 @@ build/
 *.conf
 *.json
 *.jks
+*.crt
+*.der
