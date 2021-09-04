@@ -18,7 +18,7 @@ public class MessageSender {
 
 	private final QueueMessagingTemplate queueMessagingTemplate;
 
-	private String queueName;
+	// private String queueName;
 
 	@Autowired
 	public MessageSender(AmazonSQSAsync sqs) {
@@ -28,9 +28,14 @@ public class MessageSender {
 	@Scheduled(fixedDelay = 5000)
 	public void sendObject() {
 		Survey survey = new Survey();
-		queueName = SQSQueueNames.TEST_QUEUE;
-		this.queueMessagingTemplate.send(queueName, MessageBuilder.withPayload(Jackson.toJsonString(survey)).build());
+		this.queueMessagingTemplate.send(SQSQueueNames.TEST_QUEUE, MessageBuilder.withPayload(Jackson.toJsonString(survey)).build());
 		System.out.println("sending a survey");
 	}
 
+	public void sendObject(String surveyId) {
+		this.queueMessagingTemplate.send(SQSQueueNames.SUBMISSIONS_QUEUE, MessageBuilder.withPayload(Jackson.toJsonString(surveyId)).build());
+		this.queueMessagingTemplate.send(SQSQueueNames.SURVEY_QUEUE, MessageBuilder.withPayload(Jackson.toJsonString(surveyId)).build());
+
+	}
+	
 }
