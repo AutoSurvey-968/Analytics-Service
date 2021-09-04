@@ -20,25 +20,28 @@ import com.revature.autosurvey.analytics.data.SurveyDao;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
+/**
+ * 
+ * @author MuckJosh
+ *	
+ */
 @Service
 public class ReportServiceImpl implements ReportService {
-	
-	@Autowired
+
 	private ResponseDao responseDao;
-	@Autowired
-	public void setResponseDao(ResponseDao responseDao) {
-		this.responseDao=responseDao;
-	}
+	//priavate MessageUTil
 	
-	@Autowired
 	private SurveyDao surveyDao;
-	@Autowired
-	public void setSurveyDao(SurveyDao surveyDao) {
-		this.surveyDao=surveyDao;
-	}
-	
+	//Used to format dates for Dao lookup.
 	private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+	
+	
+	@Autowired
+	public ReportServiceImpl(ResponseDao responseDao, SurveyDao surveyDao) {
+		super();
+		this.responseDao = responseDao;
+		this.surveyDao = surveyDao;
+	}
 
 	@Override
 	public Mono<Report> getReport(String surveyId) {
@@ -53,6 +56,8 @@ public class ReportServiceImpl implements ReportService {
 	public Mono<Report> getReport(String surveyId, String weekDay, String batchName) {
 		
 		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
+		//Survey = MOno.formCallable(
+		
 		Flux<Response> responses = responseDao.getResponses(surveyId, weekDay, batchName);
 		
 		LocalDate ld = LocalDate.parse(weekDay, DATE_TIME_FORMAT);
@@ -74,7 +79,12 @@ public class ReportServiceImpl implements ReportService {
 		Mono<Report> newReport = createReport(survey, responses);
 		return addDeltaToReport(oldReport, newReport);
 	}
-
+	/**
+	 * 
+	 * @param oldReport previous report
+	 * @param newReport	current report
+	 * @return delta between the two reports datums for each question.
+	 */
 	private Mono<Report> addDeltaToReport(Mono<Report> oldReport, Mono<Report> newReport) {
 		return newReport.flatMap(report -> 
 			oldReport.map(old -> {
@@ -122,15 +132,12 @@ public class ReportServiceImpl implements ReportService {
 					if(question == null) {
 						return;
 					}
-					//currently using short answer because number doesn't exist
-					if(question.getQuestionType() == QuestionType.RADIO) {
-						AnalyticsData d = average(question, r);
-						if(d==null) {
-							return;
-						}
-						report.getAverages().put(question.getTitle(), d);
-					}
-					if(question.getQuestionType() == QuestionType.DROPDOWN) {
+					//If the question is of a numerical answer type produce Data on question.
+					if(question.getQuestionType() == QuestionType.RADIO || question.getQuestionType() == QuestionType.CHECKBOX || question.getQuestionType() == QuestionType.DROPDOWN) {
+						
+						//average data can be null
+						report.getAverages().put(question.getTitle(), average(question, r));
+						//percentage data can be null
 						report.getPercentages().put(question.getTitle(), percentages(question, r));
 					}
 				});
@@ -140,26 +147,41 @@ public class ReportServiceImpl implements ReportService {
 		});
 	}
 	
+	/**
+	 * 
+	 * @param question Question that is linked to a response
+	 * @param r	List of responses to that particular question
+	 * @return return data for that question.
+	 */
 	private AnalyticsData average(Question question, List<Response> r) {
 		Double average = 0.0;
 		AnalyticsData d = new AnalyticsData();
+		//ensure question has a title for look up in response
 		if(question.getTitle() == null) {
 			return null;
 		}
+		//max possible size for average/size
 		int size= r.size();
 
-		//if processible make an average and add to report
+		/*
+		 * if possible make an average and add to report
+		 * if a check is not passed size needs to decrease to calculate correct
+		 * average.
+		 */
 		for(int i = 0; i < r.size(); i++) {
 			Response res = r.get(i);
+			//response check
 			if(res.getResponses() == null) {
 				size--;
 				continue;
 			}
+			//response question check
 			if(res.getResponses().get(question.getTitle())!=null&&!res.getResponses().get(question.getTitle()).equals("")){
-				String s = r.get(i).getResponses().get(question.getTitle());
+				String s = res.getResponses().get(question.getTitle());
 				try {
 					average += Double.valueOf(s);
 				} catch (NumberFormatException e) {
+					//response is not a numerical value. 
 					size--;
 				}
 
@@ -168,6 +190,7 @@ public class ReportServiceImpl implements ReportService {
 			}
 		}
 		if(size==0) {
+			//cannot dvide by 0
 			return null;
 		}
 		d.setDatum(average/size);
@@ -177,6 +200,10 @@ public class ReportServiceImpl implements ReportService {
 	private Map<String, AnalyticsData> percentages(Question question, List<Response> r){
 		Map<String, AnalyticsData> choicesMap = new HashMap<>();
 		int total = 0;
+		//ensure question has choices available
+		if(question.getChoices().isEmpty())
+			return choicesMap;
+		//register data for each choice
 		question.getChoices().forEach(choice -> {
 
 			AnalyticsData d = new AnalyticsData();
