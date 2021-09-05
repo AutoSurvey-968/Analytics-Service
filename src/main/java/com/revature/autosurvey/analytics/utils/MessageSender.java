@@ -32,10 +32,8 @@ public class MessageSender {
 		System.out.println("sending a survey");
 	}
 
-	public void sendObject(String surveyId) {
-		this.queueMessagingTemplate.send(SQSQueueNames.SUBMISSIONS_QUEUE, MessageBuilder.withPayload(Jackson.toJsonString(surveyId)).build());
-		this.queueMessagingTemplate.send(SQSQueueNames.SURVEY_QUEUE, MessageBuilder.withPayload(Jackson.toJsonString(surveyId)).build());
-
+	public void sendObject(String queueName, String surveyId) {
+		this.queueMessagingTemplate.send(queueName, MessageBuilder.withPayload(Jackson.toJsonString(surveyId)).build());
 	}
 	
 }

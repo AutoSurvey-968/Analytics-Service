@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,61 +18,81 @@ import com.revature.autosurvey.analytics.beans.Response;
 import com.revature.autosurvey.analytics.beans.Survey;
 import com.revature.autosurvey.analytics.data.ResponseDao;
 import com.revature.autosurvey.analytics.data.SurveyDao;
+import com.revature.autosurvey.analytics.utils.MessageReceiver;
+import com.revature.autosurvey.analytics.utils.MessageSender;
+import com.revature.autosurvey.analytics.utils.SQSQueueNames;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
 /**
  * 
  * @author MuckJosh
- *	
+ * 
  */
 @Service
 public class ReportServiceImpl implements ReportService {
 
 	private ResponseDao responseDao;
-	//priavate MessageUTil
-	
+	// priavate MessageUTil
+
 	private SurveyDao surveyDao;
-	//Used to format dates for Dao lookup.
+	// Used to format dates for Dao lookup.
 	private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-	
-	
+
+	private MessageSender sender;
+	private MessageReceiver receiver;
+
 	@Autowired
-	public ReportServiceImpl(ResponseDao responseDao, SurveyDao surveyDao) {
+	public ReportServiceImpl(ResponseDao responseDao, SurveyDao surveyDao, MessageSender sender,
+			MessageReceiver receiver) {
 		super();
 		this.responseDao = responseDao;
 		this.surveyDao = surveyDao;
+		this.sender = sender;
+		this.receiver = receiver;
 	}
 
 	@Override
 	public Mono<Report> getReport(String surveyId) {
+
+		sender.sendObject(SQSQueueNames.SURVEY_QUEUE, surveyId);
+		// need mono of survey that receives from survey queue
+
 		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
 		Flux<Response> responses = responseDao.getResponses(surveyId);
-		return createReport(survey,responses);
+		return createReport(survey, responses);
 	}
-	
-
 
 	@Override
 	public Mono<Report> getReport(String surveyId, String weekDay, String batchName) {
-		
+
+		sender.sendObject(SQSQueueNames.SURVEY_QUEUE, surveyId);
+
+		// need mono of survey that receives from survey queue
+
 		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
-		//Survey = MOno.formCallable(
-		
+		// Survey = MOno.formCallable(
+
 		Flux<Response> responses = responseDao.getResponses(surveyId, weekDay, batchName);
-		
+
 		LocalDate ld = LocalDate.parse(weekDay, DATE_TIME_FORMAT);
-		Flux<Response> oldResponses = responseDao.getResponses(surveyId, ld.minusDays(7).format(DATE_TIME_FORMAT), batchName);
+		Flux<Response> oldResponses = responseDao.getResponses(surveyId, ld.minusDays(7).format(DATE_TIME_FORMAT),
+				batchName);
 		Mono<Report> oldReport = createReport(survey, oldResponses);
 		Mono<Report> newReport = createReport(survey, responses);
 		return addDeltaToReport(oldReport, newReport);
 	}
-	
+
 	@Override
 	public Mono<Report> getReport(String surveyId, String weekDay) {
-		
+
+		sender.sendObject(SQSQueueNames.SURVEY_QUEUE, surveyId);
+
+		// need mono of survey that receives from survey queue
+
 		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
-		Flux<Response> responses = responseDao.getResponses(surveyId, weekDay);	
+		Flux<Response> responses = responseDao.getResponses(surveyId, weekDay);
 
 		LocalDate ld = LocalDate.parse(weekDay, DATE_TIME_FORMAT);
 		Flux<Response> oldResponses = responseDao.getResponses(surveyId, ld.minusDays(7).format(DATE_TIME_FORMAT));
@@ -79,65 +100,69 @@ public class ReportServiceImpl implements ReportService {
 		Mono<Report> newReport = createReport(survey, responses);
 		return addDeltaToReport(oldReport, newReport);
 	}
+
 	/**
 	 * 
 	 * @param oldReport previous report
-	 * @param newReport	current report
+	 * @param newReport current report
 	 * @return delta between the two reports datums for each question.
 	 */
 	private Mono<Report> addDeltaToReport(Mono<Report> oldReport, Mono<Report> newReport) {
-		return newReport.flatMap(report -> 
-			oldReport.map(old -> {
-				if(old.getAverages().size() == 0 && old.getPercentages().size() == 0) {
-					return report;
-				}
-				Map<String, AnalyticsData> averages = report.getAverages();
-				for(Entry<String, AnalyticsData> question : averages.entrySet()) {
-					AnalyticsData newData = question.getValue();
-					AnalyticsData oldData = old.getAverages().get(question.getKey());
-					newData.setDelta(newData.getDatum()-oldData.getDatum());
-				}
-				Map<String, Map<String, AnalyticsData>> percentages = report.getPercentages();
-				for(Entry<String, Map<String, AnalyticsData>> question : percentages.entrySet()) {
-					Map<String, AnalyticsData> sub = question.getValue();
-					for(Entry<String, AnalyticsData> option : sub.entrySet()) {
-						AnalyticsData newData = option.getValue();
-						AnalyticsData oldData = old.getPercentages().get(question.getKey()).get(option.getKey());
-						newData.setDelta(newData.getDatum()-oldData.getDatum());
-					}
-				}
+		return newReport.flatMap(report -> oldReport.map(old -> {
+			if (old.getAverages().size() == 0 && old.getPercentages().size() == 0) {
 				return report;
-			})
-		);
+			}
+			Map<String, AnalyticsData> averages = report.getAverages();
+			for (Entry<String, AnalyticsData> question : averages.entrySet()) {
+				AnalyticsData newData = question.getValue();
+				AnalyticsData oldData = old.getAverages().get(question.getKey());
+				newData.setDelta(newData.getDatum() - oldData.getDatum());
+			}
+			Map<String, Map<String, AnalyticsData>> percentages = report.getPercentages();
+			for (Entry<String, Map<String, AnalyticsData>> question : percentages.entrySet()) {
+				Map<String, AnalyticsData> sub = question.getValue();
+				for (Entry<String, AnalyticsData> option : sub.entrySet()) {
+					AnalyticsData newData = option.getValue();
+					AnalyticsData oldData = old.getPercentages().get(question.getKey()).get(option.getKey());
+					newData.setDelta(newData.getDatum() - oldData.getDatum());
+				}
+			}
+			return report;
+		}));
 	}
 
 	private Mono<Report> createReport(Mono<Survey> survey, Flux<Response> responses) {
 
 		/*
-		 * flatMap contents of survey to be used with a map of the contents of responses.
-		 * The map of the list of responses' content will return a Mono of Report that's been constructed with populated fields to the flatMap,
-		 * flatMap will return the Mono of the previous map.
+		 * flatMap contents of survey to be used with a map of the contents of
+		 * responses. The map of the list of responses' content will return a Mono of
+		 * Report that's been constructed with populated fields to the flatMap, flatMap
+		 * will return the Mono of the previous map.
 		 */
 		return survey.flatMap(s -> {
 			Mono<List<Response>> toMap = responses.collectList();
 			return toMap.map(r -> {
-				Report report = new Report(s.getUuid().toString()); // Testing to see if we get the UUID from Survey, will probably change type of Report.getSurveyId to UUID later
+				Report report = new Report(s.getUuid().toString()); // Testing to see if we get the UUID from Survey,
+																	// will probably change type of Report.getSurveyId
+																	// to UUID later
 				report.setAverages(new HashMap<>());
 				report.setPercentages(new HashMap<>());
-				if(r.isEmpty()) {
+				if (r.isEmpty()) {
 					return report;
 				}
 				s.getQuestions().forEach(question -> {
 
-					if(question == null) {
+					if (question == null) {
 						return;
 					}
-					//If the question is of a numerical answer type produce Data on question.
-					if(question.getQuestionType() == QuestionType.RADIO || question.getQuestionType() == QuestionType.CHECKBOX || question.getQuestionType() == QuestionType.DROPDOWN) {
-						
-						//average data can be null
+					// If the question is of a numerical answer type produce Data on question.
+					if (question.getQuestionType() == QuestionType.RADIO
+							|| question.getQuestionType() == QuestionType.CHECKBOX
+							|| question.getQuestionType() == QuestionType.DROPDOWN) {
+
+						// average data can be null
 						report.getAverages().put(question.getTitle(), average(question, r));
-						//percentage data can be null
+						// percentage data can be null
 						report.getPercentages().put(question.getTitle(), percentages(question, r));
 					}
 				});
@@ -146,64 +171,64 @@ public class ReportServiceImpl implements ReportService {
 			});
 		});
 	}
-	
+
 	/**
 	 * 
 	 * @param question Question that is linked to a response
-	 * @param r	List of responses to that particular question
+	 * @param r        List of responses to that particular question
 	 * @return return data for that question.
 	 */
 	private AnalyticsData average(Question question, List<Response> r) {
 		Double average = 0.0;
 		AnalyticsData d = new AnalyticsData();
-		//ensure question has a title for look up in response
-		if(question.getTitle() == null) {
+		// ensure question has a title for look up in response
+		if (question.getTitle() == null) {
 			return null;
 		}
-		//max possible size for average/size
-		int size= r.size();
+		// max possible size for average/size
+		int size = r.size();
 
 		/*
-		 * if possible make an average and add to report
-		 * if a check is not passed size needs to decrease to calculate correct
-		 * average.
+		 * if possible make an average and add to report if a check is not passed size
+		 * needs to decrease to calculate correct average.
 		 */
-		for(int i = 0; i < r.size(); i++) {
+		for (int i = 0; i < r.size(); i++) {
 			Response res = r.get(i);
-			//response check
-			if(res.getResponses() == null) {
+			// response check
+			if (res.getResponses() == null) {
 				size--;
 				continue;
 			}
-			//response question check
-			if(res.getResponses().get(question.getTitle())!=null&&!res.getResponses().get(question.getTitle()).equals("")){
+			// response question check
+			if (res.getResponses().get(question.getTitle()) != null
+					&& !res.getResponses().get(question.getTitle()).equals("")) {
 				String s = res.getResponses().get(question.getTitle());
 				try {
 					average += Double.valueOf(s);
 				} catch (NumberFormatException e) {
-					//response is not a numerical value. 
+					// response is not a numerical value.
 					size--;
 				}
 
-			}else {
+			} else {
 				size--;
 			}
 		}
-		if(size==0) {
-			//cannot dvide by 0
+		if (size == 0) {
+			// cannot dvide by 0
 			return null;
 		}
-		d.setDatum(average/size);
+		d.setDatum(average / size);
 		return d;
 	}
 
-	private Map<String, AnalyticsData> percentages(Question question, List<Response> r){
+	private Map<String, AnalyticsData> percentages(Question question, List<Response> r) {
 		Map<String, AnalyticsData> choicesMap = new HashMap<>();
 		int total = 0;
-		//ensure question has choices available
-		if(question.getChoices().isEmpty())
+		// ensure question has choices available
+		if (question.getChoices().isEmpty())
 			return choicesMap;
-		//register data for each choice
+		// register data for each choice
 		question.getChoices().forEach(choice -> {
 
 			AnalyticsData d = new AnalyticsData();
@@ -212,29 +237,29 @@ public class ReportServiceImpl implements ReportService {
 		}
 
 		);
-		//adding up choices
-		for(int i = 0; i < r.size(); i++) {
-			if(r.get(i) == null || r.get(i).getResponses() == null || question.getTitle() == null) {
+		// adding up choices
+		for (int i = 0; i < r.size(); i++) {
+			if (r.get(i) == null || r.get(i).getResponses() == null || question.getTitle() == null) {
 				continue;
 			}
 			String questionTitle = r.get(i).getResponses().get(question.getTitle());
-			if(choicesMap.keySet().contains(questionTitle)) {
+			if (choicesMap.keySet().contains(questionTitle)) {
 				double value = choicesMap.get(questionTitle).getDatum();
 				AnalyticsData d = new AnalyticsData();
 				d.setDatum(++value);
 				choicesMap.put(questionTitle, d);
 				total++;
 			}
-			
-		}//creating percentages
-        for (Map.Entry<String, AnalyticsData> choiceEntry : choicesMap.entrySet()) {
+
+		} // creating percentages
+		for (Map.Entry<String, AnalyticsData> choiceEntry : choicesMap.entrySet()) {
 			AnalyticsData result = choiceEntry.getValue();
-			if(total!=0) {
-				result.setDatum(result.getDatum()/total);
+			if (total != 0) {
+				result.setDatum(result.getDatum() / total);
 				choicesMap.put(choiceEntry.getKey(), result);
 			}
-        }
-        return choicesMap;
+		}
+		return choicesMap;
 	}
-	
+
 }
