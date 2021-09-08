@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class MessageReceiver {
 	
-	private List<UUID> messageData;
+	private List<Survey> messageData;
 	private ObjectMapper mapper;
 
 	@Autowired
@@ -28,10 +28,9 @@ public class MessageReceiver {
 		mapper = new ObjectMapper();
 	}
 	
-	@SqsListener(value = SQSQueueNames.SURVEY_QUEUE)
-	public Survey receiveMessageSurvey(Message<String> message) {
-		messageData.add(message.getHeaders().getId());
-		return Jackson.fromJsonString(message.getPayload(), Survey.class); 
+	@SqsListener(value = SQSQueueNames.SURVEY_QUEUE, S)
+	public voic receiveMessageSurvey(Message<String> message) {
+		messageData.add(Jackson.fromJsonString(message.getPayload(), Survey.class)); 
 	}
 	
 }
