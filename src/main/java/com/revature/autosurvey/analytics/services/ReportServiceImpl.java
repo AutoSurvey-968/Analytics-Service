@@ -56,7 +56,7 @@ public class ReportServiceImpl implements ReportService {
 	@Override
 	public Mono<Report> getReport(String surveyId) {
 
-		sender.sendObject(SQSQueueNames.SURVEY_QUEUE, surveyId);
+		sender.sendSurveyId(SQSQueueNames.SURVEY_QUEUE, surveyId);
 		// need mono of survey that receives from survey queue
 
 		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
@@ -67,7 +67,7 @@ public class ReportServiceImpl implements ReportService {
 	@Override
 	public Mono<Report> getReport(String surveyId, String weekDay, String batchName) {
 
-		sender.sendObject(SQSQueueNames.SURVEY_QUEUE, surveyId);
+		sender.sendSurveyId(SQSQueueNames.SURVEY_QUEUE, surveyId);
 
 		// need mono of survey that receives from survey queue
 
@@ -87,7 +87,7 @@ public class ReportServiceImpl implements ReportService {
 	@Override
 	public Mono<Report> getReport(String surveyId, String weekDay) {
 
-		sender.sendObject(SQSQueueNames.SURVEY_QUEUE, surveyId);
+		sender.sendSurveyId(SQSQueueNames.SURVEY_QUEUE, surveyId);
 
 		// need mono of survey that receives from survey queue
 
