@@ -9,12 +9,10 @@ import org.springframework.cloud.aws.messaging.core.QueueMessagingTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.util.json.Jackson;
-import com.revature.autosurvey.analytics.beans.Survey;
 
 import lombok.Data;
 

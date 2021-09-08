@@ -10,22 +10,16 @@ import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
 import com.amazonaws.util.json.Jackson;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.revature.autosurvey.analytics.beans.Survey;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 @Component
 public class MessageReceiver {
 	
 	private List<Survey> messageData;
-	private ObjectMapper mapper;
 
 	@Autowired
 	public MessageReceiver() {
 		messageData = new ArrayList<>();
-		mapper = new ObjectMapper();
 	}
 	
 	@SqsListener(value = SQSQueueNames.SURVEY_QUEUE, deletionPolicy=SqsMessageDeletionPolicy.ON_SUCCESS)
