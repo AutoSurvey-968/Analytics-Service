@@ -16,6 +16,10 @@ public class Response {
 	private UUID surveyUuid;
 	private Map<String, String> responses;
 
+	public Response(String surveyUuid) {
+		this.surveyUuid = UUID.fromString(surveyUuid);
+	}
+
 	public Response(UUID responseId, String batchName, String week, UUID surveyId,
 			Map<String, String> surveyResponses) {
 		super();
