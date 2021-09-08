@@ -32,13 +32,6 @@ public class MessageSender {
 		this.sentMessages = new ArrayList<>();
 	}
 
-	@Scheduled(fixedDelay = 5000)
-	public void sendObject() {
-		Survey survey = new Survey();
-		this.queueMessagingTemplate.send(SQSQueueNames.TEST_QUEUE, MessageBuilder.withPayload(Jackson.toJsonString(survey)).build());
-		System.out.println("sending a survey");
-	}
-
 	@Async
 	public void sendSurveyId(String queueName, String surveyId) {
 		Message<String> message = MessageBuilder.withPayload(Jackson.toJsonString(surveyId)).build();

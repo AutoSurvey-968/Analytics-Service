@@ -7,7 +7,6 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.aws.messaging.listener.annotation.SqsListener;
 import org.springframework.messaging.Message;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,7 +28,6 @@ public class MessageReceiver {
 		mapper = new ObjectMapper();
 	}
 	
-	@Async
 	@SqsListener(value = SQSQueueNames.SURVEY_QUEUE)
 	public Survey receiveMessageSurvey(Message<String> message) {
 		messageData.add(message.getHeaders().getId());
