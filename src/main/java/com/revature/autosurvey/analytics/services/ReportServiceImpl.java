@@ -18,9 +18,6 @@ import com.revature.autosurvey.analytics.beans.Response;
 import com.revature.autosurvey.analytics.beans.Survey;
 import com.revature.autosurvey.analytics.data.ResponseDao;
 import com.revature.autosurvey.analytics.data.SurveyDao;
-import com.revature.autosurvey.analytics.utils.MessageReceiver;
-import com.revature.autosurvey.analytics.utils.MessageSender;
-import com.revature.autosurvey.analytics.utils.SQSQueueNames;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -40,23 +37,16 @@ public class ReportServiceImpl implements ReportService {
 	// Used to format dates for Dao lookup.
 	private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-	private MessageSender sender;
-	private MessageReceiver receiver;
-
 	@Autowired
-	public ReportServiceImpl(ResponseDao responseDao, SurveyDao surveyDao, MessageSender sender,
-			MessageReceiver receiver) {
+	public ReportServiceImpl(ResponseDao responseDao, SurveyDao surveyDao) {
 		super();
 		this.responseDao = responseDao;
 		this.surveyDao = surveyDao;
-		this.sender = sender;
-		this.receiver = receiver;
 	}
 
 	@Override
 	public Mono<Report> getReport(String surveyId) {
 
-		sender.sendSurveyId(SQSQueueNames.SURVEY_QUEUE, surveyId);
 		// need mono of survey that receives from survey queue
 
 		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
@@ -67,7 +57,6 @@ public class ReportServiceImpl implements ReportService {
 	@Override
 	public Mono<Report> getReport(String surveyId, String weekDay, String batchName) {
 
-		sender.sendSurveyId(SQSQueueNames.SURVEY_QUEUE, surveyId);
 
 		// need mono of survey that receives from survey queue
 
@@ -87,7 +76,6 @@ public class ReportServiceImpl implements ReportService {
 	@Override
 	public Mono<Report> getReport(String surveyId, String weekDay) {
 
-		sender.sendSurveyId(SQSQueueNames.SURVEY_QUEUE, surveyId);
 
 		// need mono of survey that receives from survey queue
 
