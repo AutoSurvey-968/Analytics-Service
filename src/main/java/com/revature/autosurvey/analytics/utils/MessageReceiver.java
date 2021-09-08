@@ -17,7 +17,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.revature.autosurvey.analytics.beans.Response;
 import com.revature.autosurvey.analytics.beans.Survey;
-import com.revature.autosurvey.analytics.security.AuthenticationManager;
 
 @Component
 public class MessageReceiver {
@@ -25,7 +24,7 @@ public class MessageReceiver {
 	private List<Survey> messageData;
 	private List<List<Response>> responseData;
 	private ObjectMapper mapper;
-	private Logger log = LoggerFactory.getLogger(AuthenticationManager.class);
+	private Logger log = LoggerFactory.getLogger(MessageReceiver.class);
 	
 	@Autowired
 	public MessageReceiver() {

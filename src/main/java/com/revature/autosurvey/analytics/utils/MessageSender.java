@@ -20,7 +20,6 @@ import org.springframework.stereotype.Component;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.util.json.Jackson;
 import com.revature.autosurvey.analytics.beans.Response;
-import com.revature.autosurvey.analytics.security.AuthenticationManager;
 
 import lombok.Data;
 
@@ -34,7 +33,7 @@ public class MessageSender {
 	private MessageBuilder<String> builder;
 	private List<UUID> sentMessages;
 	
-	private Logger log = LoggerFactory.getLogger(AuthenticationManager.class);
+	private Logger log = LoggerFactory.getLogger(MessageSender.class);
 	
 	@Autowired
 	public MessageSender(AmazonSQSAsync sqs) {
