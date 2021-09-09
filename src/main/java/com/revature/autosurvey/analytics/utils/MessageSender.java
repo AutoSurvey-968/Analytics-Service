@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,25 +32,23 @@ public class MessageSender {
 	private final SimpleDateFormat dateTimeFormat = new 
 			SimpleDateFormat("yyyy-MM-dd");
 	private MessageBuilder<String> builder;
-	private List<UUID> sentMessages;
 	
 	private Logger log = LoggerFactory.getLogger(MessageSender.class);
 	
 	@Autowired
 	public MessageSender(AmazonSQSAsync sqs) {
 		this.queueMessagingTemplate = new QueueMessagingTemplate(sqs);
-		this.sentMessages = new ArrayList<>();
 	}
 
 	@Async
-	public void sendSurveyId(String queueName, String surveyId) {
+	public CompletableFuture<UUID> sendSurveyId(String queueName, String surveyId) {
 		Message<String> message = MessageBuilder.withPayload(Jackson.toJsonString(surveyId)).build();
-		sentMessages.add(message.getHeaders().getId());
 		this.queueMessagingTemplate.send(queueName, message);
+		return CompletableFuture.completedFuture(message.getHeaders().getId());
 	}
 	
 	@Async
-    public void sendResponseMessage(String surveyId, Optional<String> week, Optional<String> batch) {
+    public CompletableFuture<UUID> sendResponseMessage(String surveyId, Optional<String> week, Optional<String> batch) {
         Response r = new Response(surveyId);
         if(week.isPresent()) {
             try {
@@ -63,7 +62,7 @@ public class MessageSender {
             r.setBatch(batch.get());
         }
         Message<String> message = MessageBuilder.withPayload(Jackson.toJsonString(r)).build();
-        sentMessages.add(message.getHeaders().getId());
         this.queueMessagingTemplate.send(SQSQueueNames.SUBMISSIONS_QUEUE, message);
-    }
+        return CompletableFuture.completedFuture(message.getHeaders().getId());
+	}
 }
