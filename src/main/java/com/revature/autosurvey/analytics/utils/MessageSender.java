@@ -27,7 +27,7 @@ public class MessageSender {
 
 	private final QueueMessagingTemplate queueMessagingTemplate;
 	private final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd");
-	private final String headerNameid = "MessageId";
+	private static final String headerNameid = "MessageId";
 	private MessageBuilder<String> builder;
 
 	private Logger log = LoggerFactory.getLogger(MessageSender.class);
