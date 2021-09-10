@@ -10,7 +10,6 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.Message;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -59,16 +58,17 @@ public class SQSWrapper {
 		try {
 			sentMessageId = UUID.fromString(sender.sendSurveyId(SQSQueueNames.SURVEY_QUEUE, surveyId).get(3, TimeUnit.SECONDS));
 			return Flux.fromIterable(receiver.getMessageData()).filter(message -> {
-				if (!sentMessageId.equals(null)) {
-					if (sentMessageId.equals(message.getHeaders().get("MessageId"))) {
-						return true;
-					}
+				if (sentMessageId != null && sentMessageId.equals(message.getHeaders().get("MessageId"))) {
+					return true;
 				}
 				return false;
 			}).map(message -> {
 				receiver.getMessageData().remove(message);
 				return Jackson.fromJsonString(message.getPayload(), Survey.class);
 			}).next();
+		} catch (IllegalArgumentException e) {
+			log.error("surveyid returned was null, could not convert to UUID");
+			return Mono.empty();
 		} catch (TimeoutException e) {
 			log.warn("system timed out waiting for response");
 			log.warn("timeout: \n", e);
@@ -76,6 +76,7 @@ public class SQSWrapper {
 		} catch (InterruptedException e) {
 			log.error("thread interrupted");
 			log.error("interrupted: \n", e);
+			Thread.currentThread().interrupt();
 			return Mono.empty();
 		} catch (ExecutionException e) {
 			log.error("thread execution failed");

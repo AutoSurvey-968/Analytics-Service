@@ -41,8 +41,12 @@ public class MessageSender {
 	public CompletableFuture<String> sendSurveyId(String queueName, String surveyId) {
 		Message<String> message = MessageBuilder.withPayload(Jackson.toJsonString(surveyId)).build();
 		this.queueMessagingTemplate.send(queueName, message);
-		return CompletableFuture.completedFuture(message.getHeaders().get("MessageId").toString());
-
+		try {
+        	return CompletableFuture.completedFuture(message.getHeaders().get("MessageId").toString());
+        } catch (NullPointerException n) {
+        	log.error("message has no id");
+        	return null;
+        }
 	}
 	
 	@Async
@@ -61,6 +65,11 @@ public class MessageSender {
         }
         Message<String> message = MessageBuilder.withPayload(Jackson.toJsonString(r)).build();
         this.queueMessagingTemplate.send(SQSQueueNames.SUBMISSIONS_QUEUE, message);
-        return CompletableFuture.completedFuture(message.getHeaders().get("MessageId").toString());
+        try {
+        	return CompletableFuture.completedFuture(message.getHeaders().get("MessageId").toString());
+        } catch (NullPointerException n) {
+        	log.error("message has no id");
+        	return null;
+        }
 	}
 }
