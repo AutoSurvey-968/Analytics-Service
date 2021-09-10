@@ -26,12 +26,11 @@ import lombok.Data;
 public class MessageSender {
 
 	private final QueueMessagingTemplate queueMessagingTemplate;
-	private final SimpleDateFormat dateTimeFormat = new 
-			SimpleDateFormat("yyyy-MM-dd");
+	private final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd");
 	private MessageBuilder<String> builder;
-	
+
 	private Logger log = LoggerFactory.getLogger(MessageSender.class);
-	
+
 	@Autowired
 	public MessageSender(AmazonSQSAsync sqs) {
 		this.queueMessagingTemplate = new QueueMessagingTemplate(sqs);
@@ -41,35 +40,40 @@ public class MessageSender {
 	public CompletableFuture<String> sendSurveyId(String queueName, String surveyId) {
 		Message<String> message = MessageBuilder.withPayload(Jackson.toJsonString(surveyId)).build();
 		this.queueMessagingTemplate.send(queueName, message);
-		try {
-        	return CompletableFuture.completedFuture(message.getHeaders().get("MessageId").toString());
-        } catch (NullPointerException n) {
-        	log.error("message has no id");
-        	return null;
-        }
+		if (message.getHeaders().containsKey("MessageId")) {
+			String id = message.getHeaders().get("MessageId", String.class);
+			if (id == null) {
+				return null;
+			}
+			return CompletableFuture.completedFuture(id);
+		} else
+			return null;
 	}
-	
+
 	@Async
-    public CompletableFuture<String> sendResponseMessage(String surveyId, Optional<String> week, Optional<String> batch) {
-        Response r = new Response(surveyId);
-        if(week.isPresent()) {
-            try {
-                Date d = dateTimeFormat.parse(week.get());
-                r.setDate(d);
-            }catch(ParseException e) {
-                log.error(e.toString());
-            }
-        }
-        if(batch.isPresent()) {
-            r.setBatch(batch.get());
-        }
-        Message<String> message = MessageBuilder.withPayload(Jackson.toJsonString(r)).build();
-        this.queueMessagingTemplate.send(SQSQueueNames.SUBMISSIONS_QUEUE, message);
-        try {
-        	return CompletableFuture.completedFuture(message.getHeaders().get("MessageId").toString());
-        } catch (NullPointerException n) {
-        	log.error("message has no id");
-        	return null;
-        }
+	public CompletableFuture<String> sendResponseMessage(String surveyId, Optional<String> week,
+			Optional<String> batch) {
+		Response r = new Response(surveyId);
+		if (week.isPresent()) {
+			try {
+				Date d = dateTimeFormat.parse(week.get());
+				r.setDate(d);
+			} catch (ParseException e) {
+				log.error(e.toString());
+			}
+		}
+		if (batch.isPresent()) {
+			r.setBatch(batch.get());
+		}
+		Message<String> message = MessageBuilder.withPayload(Jackson.toJsonString(r)).build();
+		this.queueMessagingTemplate.send(SQSQueueNames.SUBMISSIONS_QUEUE, message);
+		if (message.getHeaders().containsKey("MessageId")) {
+			String id = message.getHeaders().get("MessageId", String.class);
+			if (id == null) {
+				return null;
+			}
+			return CompletableFuture.completedFuture(id);
+		} else
+			return null;
 	}
 }

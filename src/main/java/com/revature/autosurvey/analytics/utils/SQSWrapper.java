@@ -58,10 +58,7 @@ public class SQSWrapper {
 		try {
 			sentMessageId = UUID.fromString(sender.sendSurveyId(SQSQueueNames.SURVEY_QUEUE, surveyId).get(3, TimeUnit.SECONDS));
 			return Flux.fromIterable(receiver.getMessageData()).filter(message -> {
-				if (sentMessageId != null && sentMessageId.equals(message.getHeaders().get("MessageId"))) {
-					return true;
-				}
-				return false;
+				 return sentMessageId != null && sentMessageId.equals(message.getHeaders().get("MessageId")); 
 			}).map(message -> {
 				receiver.getMessageData().remove(message);
 				return Jackson.fromJsonString(message.getPayload(), Survey.class);
@@ -106,13 +103,15 @@ public class SQSWrapper {
 							return null;
 						}
 					});
-		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+		} catch (ExecutionException | TimeoutException e) {
 			
 			log.error("Thread Error: \n", e);
 			return Flux.empty();
+		} catch (InterruptedException e) {
+			log.error("thread interrupted");
+			log.error("interrupted: \n", e);
+			Thread.currentThread().interrupt();
+			return Flux.empty();
 		}
-		
-		
 	}
-	
 }
