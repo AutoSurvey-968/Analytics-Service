@@ -52,7 +52,7 @@ public class SQSWrapper {
 	public Mono<Survey> getSurvey(String surveyId) {
 		final UUID sentMessageId;
 		try {
-			sentMessageId = sender.sendSurveyId(SQSQueueNames.SURVEY_QUEUE, surveyId).get(3, TimeUnit.SECONDS);
+			sentMessageId = UUID.fromString(sender.sendSurveyId(SQSQueueNames.SURVEY_QUEUE, surveyId).get(3, TimeUnit.SECONDS));
 			return Flux.fromIterable(receiver.getMessageData()).filter(message -> {
 				if (!sentMessageId.equals(null)) {
 					if (sentMessageId.equals(message.getHeaders().get("MessageId"))) {
@@ -89,7 +89,7 @@ public class SQSWrapper {
 	public Flux<Response> getResponses(String surveyId, Optional<String> week, Optional<String> batch){
 		UUID sentMessageId;
 		try {
-			sentMessageId = sender.sendResponseMessage(surveyId, week, batch).get(3, TimeUnit.SECONDS);
+			sentMessageId = UUID.fromString(sender.sendResponseMessage(surveyId, week, batch).get(3, TimeUnit.SECONDS));
 			return Flux.fromIterable(receiver.getMessageData()).filter(message -> sentMessageId.toString().equals(message.getHeaders().get("MessageId")))
 					.map(messages -> {
 						try {
