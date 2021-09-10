@@ -27,6 +27,7 @@ public class MessageSender {
 
 	private final QueueMessagingTemplate queueMessagingTemplate;
 	private final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd");
+	private final String headerNameid = "MessageId";
 	private MessageBuilder<String> builder;
 
 	private Logger log = LoggerFactory.getLogger(MessageSender.class);
@@ -40,8 +41,8 @@ public class MessageSender {
 	public CompletableFuture<String> sendSurveyId(String queueName, String surveyId) {
 		Message<String> message = MessageBuilder.withPayload(Jackson.toJsonString(surveyId)).build();
 		this.queueMessagingTemplate.send(queueName, message);
-		if (message.getHeaders().containsKey("MessageId")) {
-			String id = message.getHeaders().get("MessageId", String.class);
+		if (message.getHeaders().containsKey(headerNameid)) {
+			String id = message.getHeaders().get(headerNameid, String.class);
 			if (id == null) {
 				return null;
 			}
@@ -67,8 +68,8 @@ public class MessageSender {
 		}
 		Message<String> message = MessageBuilder.withPayload(Jackson.toJsonString(r)).build();
 		this.queueMessagingTemplate.send(SQSQueueNames.SUBMISSIONS_QUEUE, message);
-		if (message.getHeaders().containsKey("MessageId")) {
-			String id = message.getHeaders().get("MessageId", String.class);
+		if (message.getHeaders().containsKey(headerNameid)) {
+			String id = message.getHeaders().get(headerNameid, String.class);
 			if (id == null) {
 				return null;
 			}
