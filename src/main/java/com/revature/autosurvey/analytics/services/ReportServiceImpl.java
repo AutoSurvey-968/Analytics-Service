@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -46,6 +48,9 @@ public class ReportServiceImpl implements ReportService {
 
 		Mono<Survey> survey = sqsQue.getSurvey(surveyId);
 		Flux<Response> responses = sqsQue.getResponses(surveyId, Optional.empty(), Optional.empty());
+		if(survey == null || responses == null) {
+			return Mono.empty();
+		}
 		return createReport(survey, responses);
 	}
 
@@ -136,7 +141,8 @@ public class ReportServiceImpl implements ReportService {
 					// If the question is of a numerical answer type produce Data on question.
 					if (question.getQuestionType() == QuestionType.RADIO
 							|| question.getQuestionType() == QuestionType.CHECKBOX
-							|| question.getQuestionType() == QuestionType.DROPDOWN) {
+							|| question.getQuestionType() == QuestionType.DROPDOWN
+							|| question.getQuestionType() == QuestionType.MULTIPLE_CHOICE) {
 
 						// average data can be null
 						report.getAverages().put(question.getTitle(), average(question, r));
