@@ -20,8 +20,13 @@ public class ResponseDaoImpl implements ResponseDao {
 		Flux<Response> response = wc.get()
 				.uri(builder -> 
 					builder.pathSegment("responses").queryParam("surveyId", surveyId).build())
-				.retrieve()
-				.bodyToFlux(Response.class);
+				.exchangeToFlux(res -> {
+					if (res.rawStatusCode() == 200) {
+						return res.bodyToFlux(Response.class)
+								.switchIfEmpty(Flux.just(new Response(surveyId)));
+					}
+					return Flux.just(new Response(""));
+				});
 		return response;
 	}
 
@@ -34,8 +39,13 @@ public class ResponseDaoImpl implements ResponseDao {
 					.queryParam("id", surveyId)
 					.queryParam("weekStart", weekDay)
 					.build())
-				.retrieve()
-				.bodyToFlux(Response.class);
+				.exchangeToFlux(res -> {
+					if (res.rawStatusCode() == 200) {
+						return res.bodyToFlux(Response.class)
+								.switchIfEmpty(Flux.just(new Response(surveyId)));
+					}
+					return Flux.just(new Response(""));
+				});
 	}
 
 	@Override
@@ -48,8 +58,13 @@ public class ResponseDaoImpl implements ResponseDao {
 					.queryParam("weekStart", weekDay)
 					.queryParam("batch", batchName)
 					.build())
-				.retrieve()
-				.bodyToFlux(Response.class);
+				.exchangeToFlux(res -> {
+					if (res.rawStatusCode() == 200) {
+						return res.bodyToFlux(Response.class)
+								.switchIfEmpty(Flux.just(new Response(surveyId)));
+					}
+					return Flux.just(new Response(""));
+				});
 	}
 
 }

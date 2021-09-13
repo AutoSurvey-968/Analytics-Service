@@ -25,6 +25,7 @@ Analytics Service for AutoSurvey. Allows survey responses to be generalized by B
 Future Feature Opportunities:
 * Caliber2 integration with weekly skill scores.
 * Full SQS Integration.
+* Refactor to not have to make a request to the survey service when creating a report.
 
 ## Getting Started
 

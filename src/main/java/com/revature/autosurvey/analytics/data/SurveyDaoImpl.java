@@ -1,5 +1,8 @@
 package com.revature.autosurvey.analytics.data;
 
+import java.util.ArrayList;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -19,8 +22,17 @@ public class SurveyDaoImpl implements SurveyDao {
 		WebClient wc = webClient.baseUrl(System.getenv("GATEWAY_URL")).build();
 		return wc.get()
 				.uri(uriBuilder -> uriBuilder.pathSegment("surveys", "{surveyId}").build(surveyId))
-				.retrieve()
-				.bodyToMono(Survey.class);
+				.exchangeToMono(res -> {
+					if (res.rawStatusCode() == 200) {
+						return res.bodyToMono(Survey.class)
+								.switchIfEmpty(Mono.just(new Survey()).map(s -> {
+									s.setUuid(UUID.fromString(surveyId));
+									s.setQuestions(new ArrayList<>());
+									return s;
+								}));
+					}
+					return Mono.just(new Survey());
+				});
 
 	}
 
