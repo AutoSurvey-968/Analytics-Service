@@ -19,16 +19,31 @@ public class ReportController {
 	
 	@GetMapping(params = {"surveyId"})
 	public Mono<ResponseEntity<Report>> getReport(String surveyId) {
-		return reportService.getReport(surveyId).map(report -> ResponseEntity.status(200).body(report));
+		return reportService.getReport(surveyId).map(report -> {
+			if (report.getSurveyId() == null) {
+				return ResponseEntity.notFound().build();
+			}
+			return ResponseEntity.status(200).body(report);
+		});
 	}
 	
 	@GetMapping(params = {"surveyId", "weekDay"})
 	public Mono<ResponseEntity<Report>> getReport(String surveyId, String weekDay) {
-		return reportService.getReport(surveyId, weekDay).map(report -> ResponseEntity.status(200).body(report));
+		return reportService.getReport(surveyId, weekDay).map(report -> {
+			if (report.getSurveyId() == null) {
+				return ResponseEntity.notFound().build();
+			}
+			return ResponseEntity.status(200).body(report);
+		});
 	}
 	
 	@GetMapping(params = {"surveyId", "weekDay", "batchName"})
 	public Mono<ResponseEntity<Report>> getReport(String surveyId, String weekDay, String batchName) {
-		return reportService.getReport(surveyId, weekDay, batchName).map(report -> ResponseEntity.status(200).body(report));
+		return reportService.getReport(surveyId, weekDay, batchName).map(report ->{
+			if (report.getSurveyId() == null) {
+				return ResponseEntity.notFound().build();
+			}
+			return ResponseEntity.status(200).body(report);
+		});
 	}
 }

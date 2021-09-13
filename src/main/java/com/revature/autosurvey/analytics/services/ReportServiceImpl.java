@@ -97,6 +97,9 @@ public class ReportServiceImpl implements ReportService {
 	 */
 	private Mono<Report> addDeltaToReport(Mono<Report> oldReport, Mono<Report> newReport) {
 		return newReport.flatMap(report -> oldReport.map(old -> {
+			if (report.getSurveyId() == null || old.getSurveyId() == null) {
+				return new Report();
+			}
 			if (old.getAverages().size() == 0 && old.getPercentages().size() == 0) {
 				return report;
 			}
@@ -128,6 +131,9 @@ public class ReportServiceImpl implements ReportService {
 		 * will return the Mono of the previous map.
 		 */
 		return survey.flatMap(s -> {
+			if (s.getUuid() == null) {
+				return Mono.just(new Report());
+			}
 			Mono<List<Response>> toMap = responses.collectList();
 			return toMap.map(r -> {
 				Report report = new Report(s.getUuid().toString()); // Testing to see if we get the UUID from Survey,
@@ -146,7 +152,8 @@ public class ReportServiceImpl implements ReportService {
 					// If the question is of a numerical answer type produce Data on question.
 					if (question.getQuestionType() == QuestionType.RADIO
 							|| question.getQuestionType() == QuestionType.CHECKBOX
-							|| question.getQuestionType() == QuestionType.DROPDOWN) {
+							|| question.getQuestionType() == QuestionType.DROPDOWN
+							|| question.getQuestionType() == QuestionType.MULTIPLE_CHOICE) {
 
 						// average data can be null
 						report.getAverages().put(question.getTitle(), average(question, r));
