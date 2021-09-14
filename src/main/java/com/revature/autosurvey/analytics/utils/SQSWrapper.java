@@ -1,7 +1,5 @@
 package com.revature.autosurvey.analytics.utils;
 
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -12,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.util.json.Jackson;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,14 +52,17 @@ public class SQSWrapper {
 
 	
 	public Mono<Survey> getSurvey(String surveyId) {
-		//final UUID sentMessageId;
 		try {
 			String id = sender.sendSurveyId(SQSQueueNames.SURVEY_QUEUE, surveyId);
 			UUID sentMessageId = UUID.fromString(id);
 			
 			return Mono.just(Jackson.fromJsonString(receiver.receive(sentMessageId).get().getBody(),Survey.class));
-		} catch (IllegalArgumentException | InterruptedException | ExecutionException e) {
+		} catch (IllegalArgumentException | ExecutionException e) {
 			log.error("surveyid returned was null, could not convert to UUID");
+			return Mono.empty();
+		} catch ( InterruptedException e) {
+			log.error("Thread Interrupted");
+			Thread.currentThread().interrupt();
 			return Mono.empty();
 		}
 	}
@@ -73,10 +73,11 @@ public class SQSWrapper {
 	 * @param week     optional week date for searching
 	 * @param batch    optional batch name for searching
 	 * @return returns a flux of responses for the service to handle
+	 * @throws InterruptedException 
 	 */
 	
 	public Flux<Response> getResponses(String surveyId, Optional<String> week, Optional<String> batch) {
-		System.out.println("here");
+		log.trace("here");
 		String id = sender.sendResponseMessage(surveyId, week, batch);
 		if(id == null) {
 			return Flux.empty();
@@ -86,12 +87,14 @@ public class SQSWrapper {
 		try {
 			return Flux.fromIterable(mapper.readValue(receiver.receive(sentMessageId).get().getBody(),
 					mapper.getTypeFactory().constructCollectionLikeType(List.class, Response.class)));
-		} catch (JsonProcessingException | InterruptedException | ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (JsonProcessingException | ExecutionException e) {
+			log.error(e.toString(), e);
+			return Flux.empty();
+		} catch (InterruptedException e) {
+			log.error("Thread interrupted");
+			Thread.currentThread().interrupt();
 			return Flux.empty();
 		}
-		
 	}
 
 }
