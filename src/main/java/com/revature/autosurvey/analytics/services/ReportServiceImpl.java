@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,32 +17,31 @@ import com.revature.autosurvey.analytics.beans.Question.QuestionType;
 import com.revature.autosurvey.analytics.beans.Report;
 import com.revature.autosurvey.analytics.beans.Response;
 import com.revature.autosurvey.analytics.beans.Survey;
-import com.revature.autosurvey.analytics.data.ResponseDao;
-import com.revature.autosurvey.analytics.data.SurveyDao;
+import com.revature.autosurvey.analytics.utils.SQSWrapper;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
  * 
- * @author MuckJosh
+ * @author MuckJosh, siddmohanty111
+ * 
+ * NOTE: Attempting to receive or send surveys will, in general, not work; you 
+ * will probably get message size limitation errors. See MessageSender.java. 
+ * A version of this project that is more capable of sending and receiving data 
+ * exists on the branch named 'analyticsRollback'.
  * 
  */
 @Service
 public class ReportServiceImpl implements ReportService {
 
-	private ResponseDao responseDao;
-	// priavate MessageUTil
-
-	private SurveyDao surveyDao;
-	// Used to format dates for Dao lookup.
+	private SQSWrapper sqsQue;
 	private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 	@Autowired
-	public ReportServiceImpl(ResponseDao responseDao, SurveyDao surveyDao) {
+	public ReportServiceImpl(SQSWrapper sqsQue) {
 		super();
-		this.responseDao = responseDao;
-		this.surveyDao = surveyDao;
+		this.sqsQue = sqsQue;
 	}
 
 	@Override
@@ -49,8 +49,11 @@ public class ReportServiceImpl implements ReportService {
 
 		// need mono of survey that receives from survey queue
 
-		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
-		Flux<Response> responses = responseDao.getResponses(surveyId);
+		Mono<Survey> survey = sqsQue.getSurvey(surveyId);
+		Flux<Response> responses = sqsQue.getResponses(surveyId, Optional.empty(), Optional.empty());
+		if(survey == null || responses == null) {
+			return Mono.empty();
+		}
 		return createReport(survey, responses);
 	}
 
@@ -58,16 +61,11 @@ public class ReportServiceImpl implements ReportService {
 	public Mono<Report> getReport(String surveyId, String weekDay, String batchName) {
 
 
-		// need mono of survey that receives from survey queue
-
-		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
-		// Survey = MOno.formCallable(
-
-		Flux<Response> responses = responseDao.getResponses(surveyId, weekDay, batchName);
+		Mono<Survey> survey = sqsQue.getSurvey(surveyId);
+		Flux<Response> responses = sqsQue.getResponses(surveyId, Optional.of(weekDay), Optional.of(batchName));
 
 		LocalDate ld = LocalDate.parse(weekDay, DATE_TIME_FORMAT);
-		Flux<Response> oldResponses = responseDao.getResponses(surveyId, ld.minusDays(7).format(DATE_TIME_FORMAT),
-				batchName);
+		Flux<Response> oldResponses = sqsQue.getResponses(surveyId, Optional.of(ld.minusDays(7).format(DATE_TIME_FORMAT)), Optional.of(batchName));
 		Mono<Report> oldReport = createReport(survey, oldResponses);
 		Mono<Report> newReport = createReport(survey, responses);
 		return addDeltaToReport(oldReport, newReport);
@@ -79,11 +77,11 @@ public class ReportServiceImpl implements ReportService {
 
 		// need mono of survey that receives from survey queue
 
-		Mono<Survey> survey = surveyDao.getSurvey(surveyId);
-		Flux<Response> responses = responseDao.getResponses(surveyId, weekDay);
+		Mono<Survey> survey = sqsQue.getSurvey(surveyId);
+		Flux<Response> responses = sqsQue.getResponses(surveyId, Optional.of(weekDay), Optional.empty());
 
 		LocalDate ld = LocalDate.parse(weekDay, DATE_TIME_FORMAT);
-		Flux<Response> oldResponses = responseDao.getResponses(surveyId, ld.minusDays(7).format(DATE_TIME_FORMAT));
+		Flux<Response> oldResponses = sqsQue.getResponses(surveyId, Optional.of(ld.minusDays(7).format(DATE_TIME_FORMAT)), Optional.empty());
 		Mono<Report> oldReport = createReport(survey, oldResponses);
 		Mono<Report> newReport = createReport(survey, responses);
 		return addDeltaToReport(oldReport, newReport);
@@ -146,7 +144,8 @@ public class ReportServiceImpl implements ReportService {
 					// If the question is of a numerical answer type produce Data on question.
 					if (question.getQuestionType() == QuestionType.RADIO
 							|| question.getQuestionType() == QuestionType.CHECKBOX
-							|| question.getQuestionType() == QuestionType.DROPDOWN) {
+							|| question.getQuestionType() == QuestionType.DROPDOWN
+							|| question.getQuestionType() == QuestionType.MULTIPLE_CHOICE) {
 
 						// average data can be null
 						report.getAverages().put(question.getTitle(), average(question, r));

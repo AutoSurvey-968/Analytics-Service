@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -26,6 +27,7 @@ import com.revature.autosurvey.analytics.beans.Survey;
 import com.revature.autosurvey.analytics.data.ResponseDao;
 import com.revature.autosurvey.analytics.data.SurveyDao;
 import com.revature.autosurvey.analytics.services.ReportServiceImpl;
+import com.revature.autosurvey.analytics.utils.SQSWrapper;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -36,11 +38,9 @@ import reactor.test.StepVerifier;
 class ReportServiceImplTest {
 
 	@Mock
-	private ResponseDao responseDao;
-	@Mock
-	private SurveyDao surveyDao;
+	private SQSWrapper sqs;
 	@InjectMocks
-	private ReportServiceImpl repService = new ReportServiceImpl(responseDao, surveyDao);
+	private ReportServiceImpl repService = new ReportServiceImpl(sqs);
 	
 	private static Flux<Response> responses;
 	private static Flux<Response> oldresponses;
@@ -207,10 +207,10 @@ class ReportServiceImplTest {
 	
 	@Test
 	void basicFunctionality() {
-		Mockito.when(responseDao.getResponses("1")).thenReturn(responses);
+		Mockito.when(sqs.getResponses("1",Optional.empty(), Optional.empty())).thenReturn(responses);
 		
-		Mockito.when(responseDao.getResponses("1",EmptyExample)).thenReturn(emptyResponses);
-		Mockito.when(surveyDao.getSurvey("1")).thenReturn(survey);
+		Mockito.when(sqs.getResponses("1",Optional.of(EmptyExample), Optional.empty())).thenReturn(emptyResponses);
+		Mockito.when(sqs.getSurvey("1")).thenReturn(survey);
 		Map<String,AnalyticsData> mctest= new HashMap<>();
 		Map<String,Map<String,AnalyticsData>> percentages= new HashMap<>();
 		Map<String, AnalyticsData> averages=new HashMap<>();
@@ -229,8 +229,8 @@ class ReportServiceImplTest {
 		averages.put("mctest", mcAvgData);
 		
 		Mono<Report> monoR = repService.getReport("1");
-		Mockito.verify(responseDao).getResponses("1");
-		Mockito.verify(surveyDao).getSurvey("1");
+		Mockito.verify(sqs).getResponses("1", Optional.empty(), Optional.empty());
+		Mockito.verify(sqs).getSurvey("1");
 		StepVerifier.create(monoR).expectNextMatches(r-> r.getAverages().equals(averages)).verifyComplete();
 	 	
 	}
@@ -238,9 +238,9 @@ class ReportServiceImplTest {
 	@Test
 	void deltaFunctionality() {
 
-		Mockito.when(responseDao.getResponses("1",A)).thenReturn(oldresponses);
-		Mockito.when(responseDao.getResponses("1",B)).thenReturn(responses);
-		Mockito.when(surveyDao.getSurvey("1")).thenReturn(survey);
+		Mockito.when(sqs.getResponses("1",Optional.of(A), Optional.empty())).thenReturn(oldresponses);
+		Mockito.when(sqs.getResponses("1",Optional.of(B), Optional.empty())).thenReturn(responses);
+		Mockito.when(sqs.getSurvey("1")).thenReturn(survey);
 		Map<String,AnalyticsData> mctest= new HashMap<>();
 		Map<String,Map<String,AnalyticsData>> percentages= new HashMap<>();
 		Map<String, AnalyticsData> averages=new HashMap<>();
