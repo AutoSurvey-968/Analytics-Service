@@ -14,6 +14,6 @@ public class Question {
 	private Boolean hasOtherOption;
 
 	public enum QuestionType {
-		CHECKBOX, DROPDOWN, RADIO, SHORT_ANSWER
+		CHECKBOX, DROPDOWN, RADIO, SHORT_ANSWER, MULTIPLE_CHOICE
 	}
 }

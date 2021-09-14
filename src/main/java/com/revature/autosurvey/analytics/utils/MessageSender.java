@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
@@ -27,7 +28,7 @@ public class MessageSender {
 
 	private final QueueMessagingTemplate queueMessagingTemplate;
 	private final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd");
-	private static final String headerNameid = "MessageId";
+	//private static final String headerNameid = "MessageId";
 	private MessageBuilder<String> builder;
 
 	private Logger log = LoggerFactory.getLogger(MessageSender.class);
@@ -37,22 +38,21 @@ public class MessageSender {
 		this.queueMessagingTemplate = new QueueMessagingTemplate(sqs);
 	}
 
-	@Async
-	public CompletableFuture<String> sendSurveyId(String queueName, String surveyId) {
+	//@Async
+	public String sendSurveyId(String queueName, String surveyId) {
 		Message<String> message = MessageBuilder.withPayload(Jackson.toJsonString(surveyId)).build();
 		this.queueMessagingTemplate.send(queueName, message);
-		if (message.getHeaders().containsKey(headerNameid)) {
-			String id = message.getHeaders().get(headerNameid, String.class);
-			if (id == null) {
+		if (message.getHeaders().getId() != null) {
+			UUID id = message.getHeaders().getId();
+			if (id == null) 
 				return null;
-			}
-			return CompletableFuture.completedFuture(id);
+			return id.toString();
 		} else
 			return null;
 	}
 
-	@Async
-	public CompletableFuture<String> sendResponseMessage(String surveyId, Optional<String> week,
+	//@Async
+	public String sendResponseMessage(String surveyId, Optional<String> week,
 			Optional<String> batch) {
 		Response r = new Response(surveyId);
 		if (week.isPresent()) {
@@ -68,12 +68,13 @@ public class MessageSender {
 		}
 		Message<String> message = MessageBuilder.withPayload(Jackson.toJsonString(r)).build();
 		this.queueMessagingTemplate.send(SQSQueueNames.SUBMISSIONS_QUEUE, message);
-		if (message.getHeaders().containsKey(headerNameid)) {
-			String id = message.getHeaders().get(headerNameid, String.class);
+		if (message.getHeaders().getId() != null) {
+			UUID id = message.getHeaders().getId();
 			if (id == null) {
 				return null;
 			}
-			return CompletableFuture.completedFuture(id);
+			System.out.println("sent");
+			return id.toString();
 		} else
 			return null;
 	}
