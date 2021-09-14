@@ -24,7 +24,12 @@ import reactor.core.publisher.Mono;
 
 /**
  * 
- * @author MuckJosh
+ * @author MuckJosh, siddmohanty111
+ * 
+ * NOTE: Attempting to receive or send surveys will, in general, not work; you 
+ * will probably get message size limitation errors. See MessageSender.java. 
+ * A version of this project that is more capable of sending and receiving data 
+ * exists on the branch named 'analyticsRollback'.
  * 
  */
 @Service
