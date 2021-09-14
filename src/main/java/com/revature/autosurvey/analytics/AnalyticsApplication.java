@@ -20,7 +20,7 @@ public class AnalyticsApplication {
 		ApplicationContext ctx = SpringApplication.run(AnalyticsApplication.class, args);
 		Report report = ctx.getBean(ReportServiceImpl.class).getReport("12345678-1234-1234-1234-123456789abc").block();
 		if (report != null) {
-			log.trace(report.toString());
+			log.trace("Here is the report: {}", report);
 		} else {
 			log.trace("report null");
 		}
