@@ -17,6 +17,10 @@ public class ReportController {
 	@Autowired
 	private ReportService reportService;
 	
+	public void setReportService(ReportService reportService) {
+		this.reportService = reportService;
+	}
+	
 	@GetMapping(params = {"surveyId"})
 	public Mono<ResponseEntity<Report>> getReport(String surveyId) {
 		return reportService.getReport(surveyId).map(report -> ResponseEntity.status(200).body(report));
