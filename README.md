@@ -43,6 +43,8 @@ Set environment variables:
 {base-url}/
 ```
 
+NOTE: While using sender and receiver functionality in the context of messaging queues, be aware of the AWS SQS message size limit of 256 KB. More information and instruction on this is documented in the MessageSender class in the utils package and the ReportServiceImpl class in the service package. A rollback branch is available with full functionality and no messaging implementation. 
+
 ### GET:
 **Authorization level**: ADMIN-ONLY
 
@@ -53,4 +55,8 @@ Gets organized responses aggregated by week / batch
 - [Austin Withers](https://github.com/AustinWithers) - Primary
 - [Kevin Rose](https://github.com/Kevinrose235)
 - [Michael Chan](https://github.com/chanmic)
+- [Sidd Mohanty](https://github.com/siddmohanty111)
+- [Joshua Muckey](https://github.com/MuckJosh)
+- [Michael McInerney](https://github.com/mcinerneym)
+- [Alby Pawlisch](https://github.com/apawlisch)
 
